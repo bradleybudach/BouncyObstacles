@@ -6,8 +6,25 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.InputMap;
+import playball.effects.Effect;
+import playball.hitboxes.Hitbox;
+import playball.hitboxes.RectangleHitbox;
+import playball.obstacles.AllyCircleObstacle;
+import playball.obstacles.AllyRectangleObstacle;
+import playball.obstacles.CircleObstacle;
+import playball.obstacles.Obstacle;
+import playball.obstacles.RectangleObstacle;
+import playball.powerups.AllyBombPowerup;
+import playball.powerups.BombPowerup;
+import playball.powerups.ImmortalityPowerup;
+import playball.powerups.ObstacleSlowPowerup;
+import playball.powerups.Powerup;
+import playball.powerups.PowerupType;
+import playball.powerups.ShieldPowerup;
+
 import javax.swing.ActionMap;
 
 public class GameController implements ActionListener {
@@ -22,6 +39,12 @@ public class GameController implements ActionListener {
     JButton start = new JButton("START");
     JButton stop = new JButton("STOP");
     JLabel scoreLbl = new JLabel("Score: 0");
+    JPanel cards = new JPanel();
+    JPanel upgradePanel = new JPanel();
+    UpgradePanel upgrade_one = new UpgradePanel();
+    UpgradePanel upgrade_two = new UpgradePanel();
+    UpgradePanel upgrade_three = new UpgradePanel();
+    CardLayout cl;
     
     int score = 0;
     boolean gameEnded = false;
@@ -32,14 +55,40 @@ public class GameController implements ActionListener {
     
     public ArrayList<Powerup> powerups = new ArrayList<Powerup>();
     public ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
+    public ArrayList<Obstacle> allyObstacles = new ArrayList<Obstacle>();
     public ArrayList<Effect> effects = new ArrayList<Effect>();
+    
+    private int allyBounces = 1;
+    
+    // Upgrades:
+    public enum Upgrade {
+    	PARRY,
+    	TIME_SLOW,
+    	INCREASE_TIME_SLOW_DURATION,
+    	SLOW_NEAR,
+    	INCREASE_SLOW_NEAR_RANGE,
+    	MAX_SHIELDS,
+    	INCREASE_ALLY_BOUNCES
+    }
+    
+    public ArrayList<Upgrade> remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
+    		Upgrade.PARRY,
+    		Upgrade.PARRY,
+    		Upgrade.PARRY,
+    		Upgrade.TIME_SLOW,
+    		Upgrade.SLOW_NEAR,
+    		Upgrade.MAX_SHIELDS,
+    		Upgrade.MAX_SHIELDS,
+    		Upgrade.MAX_SHIELDS,
+    		Upgrade.INCREASE_ALLY_BOUNCES,
+    		Upgrade.INCREASE_ALLY_BOUNCES
+    ));
     
     public GameController() {
         frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         d = new DrawPanel(this);
-        frame.getContentPane().add(BorderLayout.CENTER, d);
 
         c.setPreferredSize(new Dimension(100,100));
         frame.getContentPane().add(BorderLayout.NORTH, c);
@@ -47,6 +96,18 @@ public class GameController implements ActionListener {
         c.add(start);
         c.add(stop);
         c.add(scoreLbl);
+        
+        upgradePanel.setLayout(new GridLayout(0, 3, 0, 0));
+        upgradePanel.add(upgrade_one);
+        upgradePanel.add(upgrade_two);
+        upgradePanel.add(upgrade_three);
+        
+        cl = new CardLayout();
+        cards.setLayout(cl);
+        cards.add(d, "GameScreen");
+        cards.add(upgradePanel, "UpgradeScreen");
+        
+        frame.getContentPane().add(BorderLayout.CENTER, cards);
         
         frame.setVisible(true);
         frame.setResizable(false);
@@ -100,8 +161,7 @@ public class GameController implements ActionListener {
 			}
         });
         
-        
-        
+        player.setController(this);
         t = new Timer(15, this);
         t.start();
     }
@@ -114,19 +174,68 @@ public class GameController implements ActionListener {
     	score++;
     	scoreLbl.setText("Score: " + score);
     	
+    	double rand; // random number for spawning items
     	if (score % 500 == 0) { // add obstacles with higher score
     		spawnObstacles();
+    	} 
+    	
+    	if (score % 1000 == 0) { 
+    		if (score >= 4000) {
+    			rand = Math.random();
+        		if (rand > 0.85) {
+        			addPowerup(PowerupType.SLOW);
+        		}
+    		}
+    		
+    		rand = Math.random();
+    		if (rand > 0.95) {
+    			addPowerup(PowerupType.IMMORTALITY);
+    		}
+    		
+    		rand = Math.random();
+    		if (rand > 0.85) {
+    			addPowerup(PowerupType.ALLY_BOMB);
+    		}
     	}
     	
     	if (score % 1500 == 0) { // add powerups
-    		addPowerup(PowerupType.SHIELD);
+    		rand = Math.random();
+    		if (rand > 0.25) {
+    			addPowerup(PowerupType.SHIELD);
+    		}
     	}
     	
     	if (score % 4000 == 0) { // add powerups
-    		addPowerup(PowerupType.BOMB);
+    		rand = Math.random();
+    		if (rand > 0.5) {
+    			addPowerup(PowerupType.BOMB);
+    		}
     	}
     	
-    	if (!d.runFrame()) { // move ball until game over
+    	if (score % 10000 == 0) { // get upgrade
+    		getUpgrade();
+    	}
+    	
+    	// Remove any obstacles that are were destroyed last frame:
+    	ArrayList<Obstacle> removeList = new ArrayList<Obstacle>();
+    	for (Obstacle o : obstacles) {
+    		if (o.queueRemove) {
+    			removeList.add(o);
+    		}
+    	}
+    	obstacles.removeAll(removeList);
+    	
+    	removeList.clear();
+    	for (Obstacle o : allyObstacles) {
+    		if (o.queueRemove) {
+    			removeList.add(o);
+    		}
+    	}
+    	allyObstacles.removeAll(removeList);
+    	
+    	
+    	// run the next frame until game over:
+    	if (!d.runFrame()) {
     		go = false;
     		gameEnded = true;
     		start.setVisible(true);
@@ -184,17 +293,33 @@ public class GameController implements ActionListener {
     /**
      * Removes all controller.obstacles from a given hitbox area
      * 
-     * @param area - area to delete controller.obstacles from
+     * @param area - area to delete obstacles from
      */
     public void clearObstaclesFromArea(Hitbox area) {
-    	ArrayList<Obstacle> removeObstacles = new ArrayList<Obstacle>();
     	for (Obstacle o : obstacles) {
     		if (area.checkCollision(o.getHitbox()) != null) {
-    			removeObstacles.add(o);
+    			o.remove();
     		}
     	}
-    	
-    	obstacles.removeAll(removeObstacles);
+    }
+    
+    /**
+     * Converts all obstacles in the given area to allies
+     * 
+     * @param area - area to convert obstacles
+     */
+    public void convertObstaclesInArea(Hitbox area) {
+    	for (Obstacle o : obstacles) {
+    		if (area.checkCollision(o.getHitbox()) != null) {
+    			if (o instanceof CircleObstacle) {
+    				allyObstacles.add(new AllyCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, allyBounces));
+    			} else if (o instanceof RectangleObstacle) {
+    				allyObstacles.add(new AllyRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, allyBounces));
+    			}
+    			
+    			o.remove();
+    		}
+    	}
     }
     
 	/**
@@ -215,6 +340,11 @@ public class GameController implements ActionListener {
 	    	case SLOW:
 	    		powerups.add(new ObstacleSlowPowerup(x, y));
 	    		break;
+	    	case IMMORTALITY:
+	    		powerups.add(new ImmortalityPowerup(x, y));
+	    		break;
+	    	case ALLY_BOMB:
+	    		powerups.add(new AllyBombPowerup(x, y));
 		default:
 			break;
     	}
@@ -224,6 +354,157 @@ public class GameController implements ActionListener {
     	effects.add(e);
     }
     
+    public void getUpgrade() {
+    	if (remainingUpgrades.size() == 0) {
+    		return;
+    	}
+    	
+    	t.stop(); // pause game
+    	
+    	Upgrade one = null;
+    	Upgrade two = null;
+    	Upgrade three = null;
+    	
+    	int upgradeSelection = (int)(Math.random()*remainingUpgrades.size());
+    	one = remainingUpgrades.get(upgradeSelection);
+    	remainingUpgrades.remove(one);
+    	
+    	if (remainingUpgrades.size() >= 1) {
+    		upgradeSelection = (int)(Math.random()*remainingUpgrades.size());
+    		
+    		two = remainingUpgrades.get(upgradeSelection);
+    		remainingUpgrades.remove(two);
+    	}
+    	
+    	if (remainingUpgrades.size() >= 1) {
+    		upgradeSelection = (int)(Math.random()*remainingUpgrades.size());
+    		
+    		three = remainingUpgrades.get(upgradeSelection);
+    		remainingUpgrades.remove(three);
+    	}
+    	
+    	ActionListener upgradeListener = new ActionListener() {
+    		private int count = 0;
+    		private boolean one, two, three = false;
+    		
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				count++;
+				
+				JButton b = ((JButton)e.getSource());
+				UpgradePanel c = (UpgradePanel)b.getParent();
+				if (c == upgrade_one) {
+					applyUpgrade(c.getUpgrade());
+					upgrade_one.removeActionListener();
+					one = true;
+				}
+				
+				if (c == upgrade_two) {
+					applyUpgrade(c.getUpgrade());
+					upgrade_two.removeActionListener();
+					two = true;
+				}
+				
+				if (c == upgrade_three) {
+					applyUpgrade(c.getUpgrade());
+					upgrade_three.removeActionListener();
+					three = true;
+				}
+				
+				
+				int visibleCount = 0;
+				if (upgrade_one.isVisible()) {
+					visibleCount++;
+				}
+				
+				if (upgrade_two.isVisible()) {
+					visibleCount++;
+				}
+				
+				if (upgrade_three.isVisible()) {
+					visibleCount++;
+				}
+				
+				if (count >= 2 || visibleCount < 2) {
+					if (!one && upgrade_one.isVisible()) {
+						upgrade_one.removeActionListener();
+						remainingUpgrades.add(upgrade_one.getUpgrade()); // re-ad not chosen upgrade
+					}
+					
+					if (!two && upgrade_two.isVisible()) {
+						upgrade_two.removeActionListener();
+						remainingUpgrades.add(upgrade_two.getUpgrade()); // re-ad not chosen upgrade
+					}
+					
+					if (!three && upgrade_two.isVisible()) {
+						upgrade_three.removeActionListener();
+						remainingUpgrades.add(upgrade_three.getUpgrade()); // re-ad not chosen upgrade
+					}
+					
+					cl.show(cards, "GameScreen");
+					player.setImmortal(30);
+					t.start();
+				}
+			}
+    		
+    	};
+    
+    	
+    	upgrade_one.setValues(one);
+    	upgrade_one.setActionListener(upgradeListener);
+    	
+    	if (two != null) { // only show if there is an upgrade to show here
+    		upgrade_two.setVisible(true);
+    		upgrade_two.setValues(two);
+        	upgrade_two.setActionListener(upgradeListener);
+    	} else {
+    		upgrade_two.setVisible(false);
+    	}
+    	
+    	if (three != null) { // only show if there is an upgrade to show here
+    		upgrade_three.setVisible(true);
+    		upgrade_three.setValues(three);
+        	upgrade_three.setActionListener(upgradeListener);
+    	} else {
+    		upgrade_three.setVisible(false);
+    	}
+    	
+    	
+    	cl.show(cards, "UpgradeScreen");
+    }
+    
+    private void applyUpgrade(Upgrade u) {
+    	switch (u) {
+    	case PARRY:
+			break;
+		case TIME_SLOW:
+			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
+			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
+			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
+			break;
+		case INCREASE_TIME_SLOW_DURATION:
+			
+			break;
+		case SLOW_NEAR:
+			player.addColdAura();
+			remainingUpgrades.add(Upgrade.INCREASE_SLOW_NEAR_RANGE);
+			remainingUpgrades.add(Upgrade.INCREASE_SLOW_NEAR_RANGE);
+			remainingUpgrades.add(Upgrade.INCREASE_SLOW_NEAR_RANGE);
+			break;
+		case INCREASE_SLOW_NEAR_RANGE:
+			player.increaseColdAuraRange(10);
+			break;
+		case MAX_SHIELDS:
+			player.increaseMaxShields();
+			break;
+		case INCREASE_ALLY_BOUNCES:
+			
+			break;
+		default:
+			System.out.println("Invalid powerup");
+			break;
+    	}
+    }
     
     /**
      * @param direction - sets the direction of the ball
@@ -256,8 +537,19 @@ public class GameController implements ActionListener {
     public void resetGame() {
     	obstacles.clear();
     	powerups.clear();
+    	effects.clear();
+    	remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
+        		Upgrade.PARRY,
+        		Upgrade.PARRY,
+        		Upgrade.PARRY,
+        		Upgrade.TIME_SLOW,
+        		Upgrade.SLOW_NEAR,
+        		Upgrade.MAX_SHIELDS,
+        		Upgrade.MAX_SHIELDS,
+        		Upgrade.MAX_SHIELDS
+        ));
+    	
     	addObstacle("RECT", 1);
-    	addPowerup(PowerupType.SHIELD);
     	player.reset();
     	gameEnded = false;
 		score = 0;

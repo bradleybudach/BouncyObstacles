@@ -1,6 +1,11 @@
 package playball;
 
 import javax.swing.*;
+
+import playball.effects.Effect;
+import playball.obstacles.Obstacle;
+import playball.powerups.Powerup;
+
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -31,6 +36,10 @@ class DrawPanel extends JPanel {
         for (Obstacle o : controller.obstacles) {
     		o.draw(g);
     	}
+        
+        for (Obstacle o : controller.allyObstacles) {
+        	o.draw(g);
+        }
         
         for (Powerup p : controller.powerups) {
         	p.draw(g);
@@ -63,6 +72,10 @@ class DrawPanel extends JPanel {
     		o.move(screenDimension);
     	}
         
+        for (Obstacle o : controller.allyObstacles) {
+        	o.move(screenDimension);
+        }
+        
         // Check Collisions
         controller.player.checkCollisions(controller.obstacles);
         
@@ -70,6 +83,13 @@ class DrawPanel extends JPanel {
         for (Obstacle o : controller.obstacles) {
         	o.checkObstacleCollisions(controller.obstacles);
         }
+        
+        for (Obstacle o : controller.allyObstacles) {
+        	o.checkObstacleCollisions(controller.obstacles); // check collision with other obstacles
+        	o.checkHitboxCollision(controller.player.getHitbox()); // check collision with player
+        }
+        
+        
         
         ArrayList<Powerup> removeList = new ArrayList<Powerup>();
         for (Powerup p : controller.powerups) {

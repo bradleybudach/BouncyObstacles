@@ -1,6 +1,7 @@
 package playball;
 
 import java.util.ArrayList;
+import playball.obstacles.Dir;
 
 public class Direction {
 	public boolean left = false;
@@ -116,11 +117,4 @@ public class Direction {
 		left = right = up = down = false;
 		setMoveSteps();
 	}
-}
-
-enum Dir {
-	LEFT,
-	RIGHT,
-	UP,
-	DOWN
 }
