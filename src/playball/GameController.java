@@ -179,6 +179,15 @@ public class GameController implements ActionListener {
 			}
         });
         
+        
+        // Parry:
+        actionMap.put("parry", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				player.parry();
+			}
+        });
+        
         addObstacle(ObstacleType.RECTANGLE, 1);
         player.setController(this);
         t = new Timer(15, this);
@@ -229,7 +238,7 @@ public class GameController implements ActionListener {
     		}
     	}
     	
-    	if (score % 100 == 0) { // get upgrade
+    	if (score % 10000 == 0) { // get upgrade
     		getUpgrade();
     	}
     	
@@ -523,12 +532,6 @@ public class GameController implements ActionListener {
     		
     		// Add Parry Keybind:
             inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0), "parry");
-            actionMap.put("parry", new AbstractAction() {
-    			@Override
-    			public void actionPerformed(ActionEvent e) {
-    				player.parry();
-    			}
-            });
             
             remainingUpgrades.add(Upgrade.INCREASE_PARRY_WINDOW);
             remainingUpgrades.add(Upgrade.INCREASE_PARRY_WINDOW);
@@ -626,6 +629,7 @@ public class GameController implements ActionListener {
     	immortalityDuration = 300;
     	immortalitySpawnChance = 0.05;
     	allyBounces = 1;
+    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0)); // remove parry keybind
     	
     	addObstacle(ObstacleType.RECTANGLE, 1);
     	player.reset();

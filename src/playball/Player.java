@@ -137,6 +137,10 @@ public class Player {
 			g2d.setColor(Color.GREEN);
 		}
 		
+		if (parry && parryTimer < parryThreshold) { // parry window is active
+			g2d.setColor(Color.YELLOW);
+		}
+		
 		g2d.fillOval(x, y, size, size);
 	}
 	
