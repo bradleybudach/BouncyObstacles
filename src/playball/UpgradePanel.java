@@ -70,6 +70,10 @@ public class UpgradePanel extends JPanel {
 			title.setText("<html>Parry</html>");
 			descriptionTest.setText("Press [btn] within 0.2 seconds of getting hit to parry an enemy and survive the hit.");
 			break;
+		case INCREASE_PARRY_WINDOW:
+			title.setText("<html>Increase Parry Window</html>");
+			descriptionTest.setText("Increase the window you have to parry enemies by 2.");
+			break;
 		case TIME_SLOW:
 			title.setText("<html>Time Slow</html>");
 			descriptionTest.setText("Press [btn] to slow time briefly.");
@@ -93,6 +97,14 @@ public class UpgradePanel extends JPanel {
 		case INCREASE_ALLY_BOUNCES:
 			title.setText("<html>Increase Ally Bounces</html>");
 			descriptionTest.setText("+1 bounces to allied obstacles.");
+			break;
+		case BETTER_IMMORTALITY:
+			title.setText("<html>Better Immortality</html>");
+			descriptionTest.setText("Immortality powerup is 10% more likely to spawn and has an its duration increased by 100.");
+			break;
+		case BOMB_RANGE:
+			title.setText("<html>Increase Bomb Range</html>");
+			descriptionTest.setText("Increase the range of all bombs by +50.");
 			break;
 		default:
 			System.out.println("Invalid powerup");

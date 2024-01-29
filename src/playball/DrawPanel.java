@@ -16,7 +16,6 @@ class DrawPanel extends JPanel {
     
     public DrawPanel(GameController controller) {
     	this.controller = controller;
-    	controller.addObstacle("RECT", 1);
     }
     
     /**

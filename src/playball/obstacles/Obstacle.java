@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 
 import playball.Direction;
+import playball.GameController;
 import playball.hitboxes.Hitbox;
 
 public abstract class Obstacle {
@@ -19,6 +20,8 @@ public abstract class Obstacle {
 	public Hitbox hitbox;
 	public Color color;
 	public int currentMoveStep = 0;
+	
+	public GameController controller;
 	
 	public boolean queueRemove = false;
 	
@@ -63,16 +66,39 @@ public abstract class Obstacle {
 		this.color = color; // custom color
 	}
 	
+	/**
+	 * Set the controller to allow obstacles to interact with other game items
+	 * @param g - game controller
+	 */
+	public void setController(GameController g) {
+		controller = g;
+	}
+	
+	/**
+	 * @return obstacle hitbox
+	 */
 	public Hitbox getHitbox() {
 		return hitbox;
 	}
 	
+	/**
+	 * Update this obstacles hitbox
+	 * @param hitbox
+	 */
 	public void setHitbox(Hitbox hitbox) {
 		this.hitbox = hitbox;
 	}
 	
+	/**
+	 * Update this obstacles speed
+	 * @param speed
+	 */
 	public void setSpeed(int speed) {
 		this.speed = speed;
+	}
+	
+	public void setColor(Color c) {
+		this.color = c;
 	}
 	
 	/**
@@ -96,6 +122,10 @@ public abstract class Obstacle {
 		}
 	}
 	
+	/**
+	 * CHeck for a collision with another hitbox and this object
+	 * @param h
+	 */
 	public void checkHitboxCollision(Hitbox h) {
 		Direction d = hitbox.checkCollision(h);
 		if (d != null) {
@@ -103,12 +133,24 @@ public abstract class Obstacle {
 		}
 	}
 	
+	/**
+	 * Queue this obstacle to be removed in the next game update
+	 */
 	public void remove() {
 		queueRemove = true;
 	}
 	
+	/**
+	 * Implement functionality for collision with a list of obstacles
+	 * @param obstaclesHit
+	 */
 	public abstract void onCollision(ArrayList<Obstacle> obstaclesHit);
 	
+	/**
+	 * Implement functionality for collision with a single obstacle
+	 * @param d - direction of the collision
+	 * @param h - hitbox of the hit item
+	 */
 	public abstract void onCollision(Direction d, Hitbox h);
 	
 	/**

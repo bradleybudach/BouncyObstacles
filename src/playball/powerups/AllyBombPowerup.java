@@ -13,10 +13,30 @@ public class AllyBombPowerup extends Powerup {
 	private int diameter = 300;
 	private int radius = 150;
 	
+	/**
+	 * Create an ally bomb.
+	 * @param x - x spawn position
+	 * @param y - y spawn position
+	 */
 	public AllyBombPowerup(int x, int y) {
 		super(x, y, 24, 24, new RectangleHitbox(x, y, 24, 24), null);
 		
 		setIcon(new ImageIcon(getClass().getResource("/images/ally-bomb.png")));
+	}
+	
+	/**
+	 * Create an ally bomb with a defined range
+	 * @param x - x spawn position
+	 * @param y - y spawn position
+	 * @param range - range
+	 */
+	public AllyBombPowerup(int x, int y, int range) {
+		super(x, y, 24, 24, new RectangleHitbox(x, y, 24, 24), null);
+		
+		setIcon(new ImageIcon(getClass().getResource("/images/ally-bomb.png")));
+		
+		diameter = range;
+		radius = range/2;
 	}
 
 	@Override

@@ -14,9 +14,14 @@ import playball.hitboxes.Hitbox;
 import playball.hitboxes.RectangleHitbox;
 import playball.obstacles.AllyCircleObstacle;
 import playball.obstacles.AllyRectangleObstacle;
+import playball.obstacles.AllyTrackingCircleObstacle;
+import playball.obstacles.AllyTrackingRectangleObstacle;
 import playball.obstacles.CircleObstacle;
 import playball.obstacles.Obstacle;
+import playball.obstacles.ObstacleType;
 import playball.obstacles.RectangleObstacle;
+import playball.obstacles.TrackingCircleObstacle;
+import playball.obstacles.TrackingRectangleObstacle;
 import playball.powerups.AllyBombPowerup;
 import playball.powerups.BombPowerup;
 import playball.powerups.ImmortalityPowerup;
@@ -46,7 +51,7 @@ public class GameController implements ActionListener {
     UpgradePanel upgrade_three = new UpgradePanel();
     CardLayout cl;
     
-    int score = 0;
+    public int score = 0;
     boolean gameEnded = false;
     
     private Dimension screenDimension = new Dimension(478, 456); // game dimensions
@@ -58,22 +63,31 @@ public class GameController implements ActionListener {
     public ArrayList<Obstacle> allyObstacles = new ArrayList<Obstacle>();
     public ArrayList<Effect> effects = new ArrayList<Effect>();
     
+    // Key Bindings:
+    InputMap inputMap;
+    ActionMap actionMap;
+    
+    // Upgrades:
     private int allyBounces = 1;
+    private double immortalitySpawnChance = 0.05;
+    private int immortalityDuration = 300;
+    private int bombRange = 300;
     
     // Upgrades:
     public enum Upgrade {
     	PARRY,
+    	INCREASE_PARRY_WINDOW,
     	TIME_SLOW,
     	INCREASE_TIME_SLOW_DURATION,
     	SLOW_NEAR,
     	INCREASE_SLOW_NEAR_RANGE,
     	MAX_SHIELDS,
-    	INCREASE_ALLY_BOUNCES
+    	INCREASE_ALLY_BOUNCES,
+    	BETTER_IMMORTALITY,
+    	BOMB_RANGE
     }
     
     public ArrayList<Upgrade> remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
-    		Upgrade.PARRY,
-    		Upgrade.PARRY,
     		Upgrade.PARRY,
     		Upgrade.TIME_SLOW,
     		Upgrade.SLOW_NEAR,
@@ -81,7 +95,10 @@ public class GameController implements ActionListener {
     		Upgrade.MAX_SHIELDS,
     		Upgrade.MAX_SHIELDS,
     		Upgrade.INCREASE_ALLY_BOUNCES,
-    		Upgrade.INCREASE_ALLY_BOUNCES
+    		Upgrade.INCREASE_ALLY_BOUNCES,
+    		Upgrade.BETTER_IMMORTALITY,
+    		Upgrade.BOMB_RANGE,
+    		Upgrade.BOMB_RANGE
     ));
     
     public GameController() {
@@ -117,9 +134,10 @@ public class GameController implements ActionListener {
         stop.addActionListener(this);
         stop.setVisible(false);
         
-        // Key Bindings:
-        InputMap inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actionMap = frame.getRootPane().getActionMap();
+        
+        // Keybinds:
+        inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        actionMap = frame.getRootPane().getActionMap();
 
         // Right:
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "moveRight");
@@ -161,6 +179,7 @@ public class GameController implements ActionListener {
 			}
         });
         
+        addObstacle(ObstacleType.RECTANGLE, 1);
         player.setController(this);
         t = new Timer(15, this);
         t.start();
@@ -168,8 +187,6 @@ public class GameController implements ActionListener {
     
     public void doit()
     {
-    	//TODO: Handle Levels Here
-    	
     	// update score:
     	score++;
     	scoreLbl.setText("Score: " + score);
@@ -188,7 +205,7 @@ public class GameController implements ActionListener {
     		}
     		
     		rand = Math.random();
-    		if (rand > 0.95) {
+    		if (rand < immortalitySpawnChance) {
     			addPowerup(PowerupType.IMMORTALITY);
     		}
     		
@@ -212,7 +229,7 @@ public class GameController implements ActionListener {
     		}
     	}
     	
-    	if (score % 10000 == 0) { // get upgrade
+    	if (score % 100 == 0) { // get upgrade
     		getUpgrade();
     	}
     	
@@ -250,18 +267,18 @@ public class GameController implements ActionListener {
     	if (score >= 1500) {
 			double rand = Math.random();
 			if (rand >= 0.5) {
-				addObstacle("CIRCLE", speed);
+				addObstacle(ObstacleType.CIRCLE, speed);
 				return; // prevent double spawns
 			}
 		}
 		
-		addObstacle("RECT", speed);
+		addObstacle(ObstacleType.RECTANGLE, speed);
     }
     
     /**
      * Adds a new obstacle to the screen
      */
-    public void addObstacle(String type, int speed) {
+    public void addObstacle(ObstacleType type, int speed) {
     	Obstacle ob = null;
     	boolean obstacleAdded = false;
 		while (!obstacleAdded) { // only end loop when obstacle doesn't collide with ball
@@ -272,13 +289,22 @@ public class GameController implements ActionListener {
 			
 			
 			//TODO: change type to enum
-			if (type.equals("RECT")) {
-				ob = new RectangleObstacle(width, height, x, y, speed, new Direction());
-			} else if (type.equals("CIRCLE")) {
-				ob = new CircleObstacle(width, x, y, speed, new Direction(), Color.ORANGE);
-			} else {
-				//TODO: throw error invalid obstacle type
-				return;
+			switch (type) {
+				case RECTANGLE:
+					ob = new RectangleObstacle(width, height, x, y, speed, new Direction());
+					break;
+				case CIRCLE:
+					ob = new CircleObstacle(width, x, y, speed, new Direction(), Color.ORANGE);
+					break;
+				case TRACKING_RECT:
+					ob = new TrackingRectangleObstacle(width, height, x, y, speed, new Direction(), this);
+					break;
+				case TRACKING_CIRCLE:
+					ob = new TrackingCircleObstacle(width, x, y, speed, new Direction(), this);
+					break;
+				default:
+					System.out.println("Invalid Obstacle Type");
+					return;
 			}
 			
 			// no obstacle within 50 px of ball:
@@ -312,9 +338,17 @@ public class GameController implements ActionListener {
     	for (Obstacle o : obstacles) {
     		if (area.checkCollision(o.getHitbox()) != null) {
     			if (o instanceof CircleObstacle) {
-    				allyObstacles.add(new AllyCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, allyBounces));
+    				if (o instanceof TrackingCircleObstacle) {
+    					allyObstacles.add(new AllyTrackingCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, this, allyBounces));
+    				} else {
+    					allyObstacles.add(new AllyCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, allyBounces));
+    				}
     			} else if (o instanceof RectangleObstacle) {
-    				allyObstacles.add(new AllyRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, allyBounces));
+    				if (o instanceof TrackingRectangleObstacle) {
+    					allyObstacles.add(new AllyTrackingRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, this, allyBounces));
+    				} else {
+    					allyObstacles.add(new AllyRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, allyBounces));
+    				}
     			}
     			
     			o.remove();
@@ -335,16 +369,16 @@ public class GameController implements ActionListener {
 	    		powerups.add(new ShieldPowerup(x, y)); 
 	    		break;
 	    	case BOMB:
-	    		powerups.add(new BombPowerup(x, y));
+	    		powerups.add(new BombPowerup(x, y, bombRange));
 	    		break;
 	    	case SLOW:
 	    		powerups.add(new ObstacleSlowPowerup(x, y));
 	    		break;
 	    	case IMMORTALITY:
-	    		powerups.add(new ImmortalityPowerup(x, y));
+	    		powerups.add(new ImmortalityPowerup(x, y, immortalityDuration));
 	    		break;
 	    	case ALLY_BOMB:
-	    		powerups.add(new AllyBombPowerup(x, y));
+	    		powerups.add(new AllyBombPowerup(x, y, bombRange));
 		default:
 			break;
     	}
@@ -354,6 +388,9 @@ public class GameController implements ActionListener {
     	effects.add(e);
     }
     
+    /**
+     * Pauses game and allows selection of 2 upgrades.
+     */
     public void getUpgrade() {
     	if (remainingUpgrades.size() == 0) {
     		return;
@@ -361,6 +398,7 @@ public class GameController implements ActionListener {
     	
     	t.stop(); // pause game
     	
+    	// Load random upgrades:
     	Upgrade one = null;
     	Upgrade two = null;
     	Upgrade three = null;
@@ -436,7 +474,7 @@ public class GameController implements ActionListener {
 						remainingUpgrades.add(upgrade_two.getUpgrade()); // re-ad not chosen upgrade
 					}
 					
-					if (!three && upgrade_two.isVisible()) {
+					if (!three && upgrade_three.isVisible()) {
 						upgrade_three.removeActionListener();
 						remainingUpgrades.add(upgrade_three.getUpgrade()); // re-ad not chosen upgrade
 					}
@@ -470,13 +508,34 @@ public class GameController implements ActionListener {
     	}
     	
     	
-    	cl.show(cards, "UpgradeScreen");
+    	cl.show(cards, "UpgradeScreen"); // display upgrade screen with upgrade options
     }
     
+    /**
+     * Apply a chosen upgrade
+     * 
+     * @param u - the upgrade to apply
+     */
     private void applyUpgrade(Upgrade u) {
     	switch (u) {
     	case PARRY:
+    		player.enableParry();
+    		
+    		// Add Parry Keybind:
+            inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0), "parry");
+            actionMap.put("parry", new AbstractAction() {
+    			@Override
+    			public void actionPerformed(ActionEvent e) {
+    				player.parry();
+    			}
+            });
+            
+            remainingUpgrades.add(Upgrade.INCREASE_PARRY_WINDOW);
+            remainingUpgrades.add(Upgrade.INCREASE_PARRY_WINDOW);
 			break;
+    	case INCREASE_PARRY_WINDOW:
+    		player.increaseParryWindow(2);
+    		break;
 		case TIME_SLOW:
 			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
 			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
@@ -498,7 +557,14 @@ public class GameController implements ActionListener {
 			player.increaseMaxShields();
 			break;
 		case INCREASE_ALLY_BOUNCES:
-			
+			allyBounces++;
+			break;
+		case BETTER_IMMORTALITY:
+			immortalitySpawnChance += 0.1;
+			immortalityDuration += 100;
+			break;
+		case BOMB_RANGE:
+			bombRange += 50;
 			break;
 		default:
 			System.out.println("Invalid powerup");
@@ -535,21 +601,33 @@ public class GameController implements ActionListener {
     }
 
     public void resetGame() {
+    	// Clear components:
     	obstacles.clear();
+    	allyObstacles.clear();
     	powerups.clear();
     	effects.clear();
+    	
+    	// Reset upgrades:
     	remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
-        		Upgrade.PARRY,
-        		Upgrade.PARRY,
         		Upgrade.PARRY,
         		Upgrade.TIME_SLOW,
         		Upgrade.SLOW_NEAR,
         		Upgrade.MAX_SHIELDS,
         		Upgrade.MAX_SHIELDS,
-        		Upgrade.MAX_SHIELDS
+        		Upgrade.MAX_SHIELDS,
+        		Upgrade.INCREASE_ALLY_BOUNCES,
+        		Upgrade.INCREASE_ALLY_BOUNCES,
+        		Upgrade.BETTER_IMMORTALITY,
+        		Upgrade.BOMB_RANGE,
+        		Upgrade.BOMB_RANGE
         ));
     	
-    	addObstacle("RECT", 1);
+    	
+    	immortalityDuration = 300;
+    	immortalitySpawnChance = 0.05;
+    	allyBounces = 1;
+    	
+    	addObstacle(ObstacleType.RECTANGLE, 1);
     	player.reset();
     	gameEnded = false;
 		score = 0;

@@ -21,14 +21,26 @@ public class Player {
 	public Direction orientation = new Direction(false, true, false, false);
 	private int speed = 2;
 	
-	// Powers:
+	// Upgrades:
+	
+	// Shields:
 	private int shields = 0;
 	private int MAX_SHIELDS = 3;
+	
+	// Immortality:
 	private boolean isImmortal = false;
 	private double maxImmortality;
+	private int immortalityDuration = 0;
+	
+	// Cold Aura:
 	private boolean hasColdAura = false;
 	private int coldAuraRange = 50;
-	private int immortalityDuration = 0;
+	
+	// Parry:
+	private boolean parry = false;
+	private int parryThreshold = 5;
+	private int parryTimer = 5;
+	private boolean isParrying = false;
 	
 	public Player(int x, int y) {
 		this.x = x;
@@ -139,6 +151,10 @@ public class Player {
 		immortalityDuration = 0;
 		hasColdAura = false;
 		coldAuraRange = 50;
+		parry = false;
+		parryThreshold = 5;
+		parryTimer = 5;
+		isParrying = false;
 	}
 	
 	// Powers:
@@ -168,15 +184,76 @@ public class Player {
 		this.coldAuraRange += increase;
 	}
 	
+	public void enableParry() {
+		parry = true;
+	}
+	
+	public void parry() {
+		isParrying = true;
+	}
+	
+	public void increaseParryWindow(int increase) {
+		parryThreshold += increase;
+		parryTimer = parryThreshold;
+	}
+	
 	/**
      * @return returns true if ball has collided with an obstacle
      */
-    public boolean checkCollisions(ArrayList<Obstacle> obstacles) {
+    public void checkCollisions(ArrayList<Obstacle> obstacles) {
+    	boolean isHit = false;
+    	
     	for (Obstacle o : obstacles) { // checks ball collisions with all obstacles
-    		if (o.getHitbox().checkCollision(playerHitbox) != null) {
+    		if (o.getHitbox().checkCollision(playerHitbox) != null) {    			
     			if (isImmortal) {
     				o.remove(); // delete hit obstacle
-    				return false;
+    				return;
+    			}
+    			
+    			isHit = true;
+    			if (parry) {
+    				if (parryTimer > 0) {
+    					if (isParrying) {
+    						
+    						// distances for bounce:
+    						int leftDist = Math.abs((x+size) - o.x);
+    						int rightDist = Math.abs(x - (o.x + o.width));
+    						int topDist = Math.abs((y+size) - o.y);
+    						int bottomDist = Math.abs(y - (o.y + o.height));
+    						
+    						o.remove(); // remove parried obstacle
+    						
+    						// Bounce player off obstacle:
+    						int leastDist = Integer.MAX_VALUE;
+    						
+    						if (leftDist < leastDist) {
+    							leastDist = leftDist;
+    							orientation.setNone();
+								orientation.setLeft();
+    						}
+    						
+    						if (rightDist < leastDist) {
+    							leastDist = rightDist;
+    							orientation.setNone();
+								orientation.setRight();
+    						}
+    						
+    						if (topDist < leastDist) {
+    							leastDist = topDist;
+    							orientation.setNone();
+								orientation.setUp();
+    						}
+    						
+    						if (bottomDist < leastDist) {
+    							leastDist = bottomDist;
+    							orientation.setNone();
+								orientation.setDown();
+    						}
+    						// TODO: other parry effects here
+    					}
+    					
+    					continue; // prevent damage until parry timer runs out
+    				}
     			}
     			
     			if (shields > 0) {
@@ -185,10 +262,9 @@ public class Player {
     			} else {
     				isAlive = false;
     			}
-    			
-    			return true;
     		}
     		
+    		// Cold aura:
     		if (hasColdAura) {
     			int coldAuraRad = coldAuraRange/2;
     			CircleHitbox coldAuraHitbox = new CircleHitbox(x-coldAuraRad, y-coldAuraRad, coldAuraRange, coldAuraRad);
@@ -199,7 +275,18 @@ public class Player {
     		}
     	}
     	
-    	return false;
+    	// Parry:
+		if (parry) {
+			if (isHit) {
+				parryTimer--; // reduce parry timer
+    		} else {
+    			parryTimer = parryThreshold; // reset parry timer if not touching an object
+    		}
+    		
+    		if (isParrying) { // reset isParrying
+    			isParrying = false;
+    		}
+		}
     }
     
     /**
