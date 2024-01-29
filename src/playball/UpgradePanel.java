@@ -68,11 +68,15 @@ public class UpgradePanel extends JPanel {
 		switch (upgrade) {
 		case PARRY:
 			title.setText("<html>Parry</html>");
-			descriptionTest.setText("Press [btn] within 0.2 seconds of getting hit to parry an enemy and survive the hit.");
+			descriptionTest.setText("Press Q within 5 frames of getting hit to parry an enemy and survive the hit, bouncing yourself in the opposite direction.");
 			break;
 		case INCREASE_PARRY_WINDOW:
-			title.setText("<html>Increase Parry Window</html>");
-			descriptionTest.setText("Increase the window you have to parry enemies by 2.");
+			title.setText("<html>Parry: Increase Window</html>");
+			descriptionTest.setText("Increase the window you have to parry enemies by 2 frames.");
+			break;
+		case PARRY_CONVERTS_ALLY:
+			title.setText("<html>Parry: Convert Ally</html>");
+			descriptionTest.setText("Instead of destroying an enemy on a parry, convert it to be an ally.");
 			break;
 		case TIME_SLOW:
 			title.setText("<html>Time Slow</html>");
@@ -105,6 +109,10 @@ public class UpgradePanel extends JPanel {
 		case BOMB_RANGE:
 			title.setText("<html>Increase Bomb Range</html>");
 			descriptionTest.setText("Increase the range of all bombs by +50.");
+			break;
+		case DROP_FREQUENCY:
+			title.setText("<html>Increase Drop Frequency</html>");
+			descriptionTest.setText("Drops will spawn +100 frames more often.");
 			break;
 		default:
 			System.out.println("Invalid powerup");

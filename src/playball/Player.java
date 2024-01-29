@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 import playball.effects.SlowEffect;
 import playball.hitboxes.CircleHitbox;
+import playball.hitboxes.Hitbox;
 import playball.obstacles.Obstacle;
 
 public class Player {
@@ -36,11 +37,16 @@ public class Player {
 	private boolean hasColdAura = false;
 	private int coldAuraRange = 50;
 	
+	// Player slowed:
+	private boolean slowed = false;
+	private int slowedSpeed = 1;
+	
 	// Parry:
 	private boolean parry = false;
 	private int parryThreshold = 5;
 	private int parryTimer = 5;
 	private boolean isParrying = false;
+	private boolean parryConvertsEnemy = false;
 	
 	public Player(int x, int y) {
 		this.x = x;
@@ -72,6 +78,11 @@ public class Player {
         	orientation.setDown();
         }
         
+        int tempSpeed = speed; // save speed to return to it after
+        if (slowed) {
+        	speed = slowedSpeed;
+        }
+        
         // move up or down
         if (orientation.up) {
             y -= speed;
@@ -93,6 +104,10 @@ public class Player {
         	immortalityDuration--;
         } else {
         	isImmortal = false;
+        }
+        
+        if (slowed) {
+        	speed = tempSpeed;
         }
 	}
 	
@@ -127,6 +142,20 @@ public class Player {
 			
 		}
 		
+		// Slowed:
+		if (slowed) {
+			g2d.setColor(Color.LIGHT_GRAY);
+			g2d.setStroke(new BasicStroke(4));
+			g2d.drawOval(x-2, y-2, size+4, size+4);
+			g2d.setColor(Color.GREEN);
+		}
+		
+		// Parry:
+		if (parry && parryTimer < parryThreshold) { // parry window is active
+			g2d.setColor(Color.YELLOW);
+		}
+		
+		// Immortality:
 		int transparency = (int)((immortalityDuration/maxImmortality)*255);
 		if (isImmortal) {
 			g2d.setColor(new Color(255, 0, 0, transparency));
@@ -137,9 +166,6 @@ public class Player {
 			g2d.setColor(Color.GREEN);
 		}
 		
-		if (parry && parryTimer < parryThreshold) { // parry window is active
-			g2d.setColor(Color.YELLOW);
-		}
 		
 		g2d.fillOval(x, y, size, size);
 	}
@@ -159,6 +185,9 @@ public class Player {
 		parryThreshold = 5;
 		parryTimer = 5;
 		isParrying = false;
+		parryConvertsEnemy = false;
+		slowed = false;
+		speed = 2;
 	}
 	
 	// Powers:
@@ -201,6 +230,30 @@ public class Player {
 		parryTimer = parryThreshold;
 	}
 	
+	public void upgradeParryConvertsEnemy() {
+		parryConvertsEnemy = true;
+	}
+	
+	public void setMoveSpeed(int speed) {
+		this.speed = speed;
+	}
+	
+	/**
+	 * Add slow effect
+	 * @param slowAmmount - slow player by this ammount
+	 */
+	public void setSlowed(int slowAmmount) {
+		slowed = true;
+		slowedSpeed = Math.max(speed-slowAmmount, 1); // set slow speed, min 1
+	}
+	
+	/**
+	 * clear slow effect
+	 */
+	public void clearSlow() {
+		slowed = false;
+	}
+	
 	/**
      * @return returns true if ball has collided with an obstacle
      */
@@ -224,6 +277,10 @@ public class Player {
     						int rightDist = Math.abs(x - (o.x + o.width));
     						int topDist = Math.abs((y+size) - o.y);
     						int bottomDist = Math.abs(y - (o.y + o.height));
+    						
+    						if (parryConvertsEnemy) { // conversion upgrade
+    							controller.convertObstacleToAlly(o);
+    						}
     						
     						o.remove(); // remove parried obstacle
     						
@@ -291,6 +348,21 @@ public class Player {
     			isParrying = false;
     		}
 		}
+    }
+    
+    
+    public void hitPlayer(Hitbox h) {
+    	if (playerHitbox.checkCollision(h) != null) {
+    		if (isImmortal) { // take no damage;
+    			return;
+    		}
+    		
+    		if (shields > 0) { // take damage
+				shields--;
+			} else {
+				isAlive = false;
+			}
+    	}
     }
     
     /**

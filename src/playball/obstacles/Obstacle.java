@@ -137,8 +137,14 @@ public abstract class Obstacle {
 	 * Queue this obstacle to be removed in the next game update
 	 */
 	public void remove() {
+		cleanup();
 		queueRemove = true;
 	}
+	
+	/**
+	 * Cleanup anything that needs to be before obstacle is removed
+	 */
+	public abstract void cleanup();
 	
 	/**
 	 * Implement functionality for collision with a list of obstacles
@@ -159,6 +165,42 @@ public abstract class Obstacle {
 	 * @param screenDimension - the dimensions of the container, allows obstacles to bounce off the edge
 	 */
 	public abstract void move(Dimension screenDimension);
+	
+	public void checkBorderCollision(Dimension screenDimension) {
+		if (x+width >= screenDimension.width) { // bounce of left or right walls
+            dir.setLeft();
+        } else if (x <= 6) {
+            dir.setRight();
+        }
+        
+        if(y+height >= screenDimension.height) { // bounce off top or bottom walls
+            dir.setUp();
+        } else if (y <= 6) {
+            dir.setDown();
+        }
+	}
+	
+	public void runMoveSteps() {
+		for (int i = 0; i < speed; i++) {
+        	currentMoveStep = (currentMoveStep + 1) % dir.moveSteps.size();
+        	switch (dir.moveSteps.get(currentMoveStep)) {
+		    	case LEFT:
+		    		x -= 1;
+		    		break;
+		    	case RIGHT:
+		    		x += 1;
+		    		break;
+		    	case UP:
+		    		y -= 1;
+		    		break;
+		    	case DOWN:
+		    		y += 1;
+		    		break;
+		    	default:
+		    		break;
+		    }
+        }
+	}
 	
 	
 	/**

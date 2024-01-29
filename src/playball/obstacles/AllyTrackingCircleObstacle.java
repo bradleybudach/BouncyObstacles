@@ -62,25 +62,7 @@ public class AllyTrackingCircleObstacle extends TrackingCircleObstacle {
             dir.setDown();
         }
         
-        for (int i = 0; i < speed; i++) {
-        	currentMoveStep = (currentMoveStep + 1) % dir.moveSteps.size();
-        	switch (dir.moveSteps.get(currentMoveStep)) {
-		    	case LEFT:
-		    		x -= 1;
-		    		break;
-		    	case RIGHT:
-		    		x += 1;
-		    		break;
-		    	case UP:
-		    		y -= 1;
-		    		break;
-		    	case DOWN:
-		    		y += 1;
-		    		break;
-		    	default:
-		    		break;
-		    }
-        }
+        runMoveSteps();
         
         hitbox.updatePosition(x, y);
 	}

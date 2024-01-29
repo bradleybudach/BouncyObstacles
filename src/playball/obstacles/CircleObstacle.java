@@ -19,7 +19,6 @@ public class CircleObstacle extends Obstacle {
 	 * @param y - y position
 	 * @param speed - speed of the circle
 	 * @param dir - direction of the circle
-	 * @param radius - radius of the circle
 	 */
 	public CircleObstacle(int diameter, int x, int y, int speed, Direction dir) {
 		super(diameter, diameter, x, y, speed, dir);
@@ -35,7 +34,6 @@ public class CircleObstacle extends Obstacle {
 	 * @param y - y position
 	 * @param speed - speed of the circle
 	 * @param dir - direction of the circle
-	 * @param radius - radius of the circle
 	 * @param color - custom color
 	 */
 	public CircleObstacle(int diameter, int x, int y, int speed, Direction dir, Color color) {
@@ -46,37 +44,9 @@ public class CircleObstacle extends Obstacle {
 
 	@Override
 	public void move(Dimension screenDimension) {
-		if (x+width >= screenDimension.width) { // bounce of left or right walls
-            dir.setLeft();
-        } else if (x <= 6) {
-            dir.setRight();
-        }
+		checkBorderCollision(screenDimension);
         
-        if(y+height >= screenDimension.height) { // bounce off top or bottom walls
-            dir.setUp();
-        } else if (y <= 6) {
-            dir.setDown();
-        }
-        
-        for (int i = 0; i < speed; i++) {
-        	currentMoveStep = (currentMoveStep + 1) % dir.moveSteps.size();
-        	switch (dir.moveSteps.get(currentMoveStep)) {
-		    	case LEFT:
-		    		x -= 1;
-		    		break;
-		    	case RIGHT:
-		    		x += 1;
-		    		break;
-		    	case UP:
-		    		y -= 1;
-		    		break;
-		    	case DOWN:
-		    		y += 1;
-		    		break;
-		    	default:
-		    		break;
-		    }
-        }
+		runMoveSteps();
         
         
         hitbox.updatePosition(x, y);
@@ -93,5 +63,8 @@ public class CircleObstacle extends Obstacle {
 
 	@Override
 	public void onCollision(Direction d, Hitbox h) {}
+
+	@Override
+	public void cleanup() {}
 	
 }
