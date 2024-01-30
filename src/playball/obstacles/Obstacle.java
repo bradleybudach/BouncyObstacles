@@ -163,21 +163,28 @@ public abstract class Obstacle {
 	 * Updates this obstacles position based on it's speed and direction
 	 * 
 	 * @param screenDimension - the dimensions of the container, allows obstacles to bounce off the edge
+	 * @return true if there is a collision with the edge
 	 */
 	public abstract void move(Dimension screenDimension);
 	
-	public void checkBorderCollision(Dimension screenDimension) {
+	public boolean checkBorderCollision(Dimension screenDimension) {
 		if (x+width >= screenDimension.width) { // bounce of left or right walls
             dir.setLeft();
+            return true;
         } else if (x <= 6) {
             dir.setRight();
+            return true;
         }
         
         if(y+height >= screenDimension.height) { // bounce off top or bottom walls
             dir.setUp();
+            return true;
         } else if (y <= 6) {
             dir.setDown();
+            return true;
         }
+        
+        return false;
 	}
 	
 	public void runMoveSteps() {

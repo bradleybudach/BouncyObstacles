@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
+import playball.effects.BombEffect;
 import playball.effects.SlowEffect;
 import playball.hitboxes.CircleHitbox;
 import playball.hitboxes.Hitbox;
@@ -57,6 +58,11 @@ public class Player {
 	private boolean isSprinting = false;
 	private boolean isSprintCooldown = false;
 	
+	// Explode on hit:
+	private boolean explodeOnHit = false;
+	private int explodeOnHitRange = 100;
+	private int explodeOnHitRaidus = 50;
+	
 	public Player(int x, int y) {
 		this.x = x;
 		this.y = y;
@@ -90,6 +96,9 @@ public class Player {
 		isSprinting = false;
 		isSprintCooldown = false;
 		currentSprintLength = 0;
+		explodeOnHit = false;
+		explodeOnHitRange = 100;
+		explodeOnHitRaidus = 50;
 	}
 	
 	
@@ -196,13 +205,6 @@ public class Player {
 			g2d.drawOval(x-coldAuraRange/2, y-coldAuraRange/2, size+coldAuraRange, size+coldAuraRange);
 		}
 		
-		// Slowed:
-		if (slowed) {
-			g2d.setColor(Color.LIGHT_GRAY);
-			g2d.setStroke(new BasicStroke(4));
-			g2d.drawOval(x-2, y-2, size+4, size+4);
-		}
-		
 		// Sprint:
 		if (currentSprintLength > 0 && currentSprintLength <= sprintStamina) {
 			int transparency = 180;
@@ -235,10 +237,17 @@ public class Player {
 			g2d.setColor(Color.GREEN);
 		}
 		
+		// Slowed:
+		if (slowed) {
+			g2d.setColor(Color.LIGHT_GRAY);
+		}
+		
 		// Parry:
 		if (parry && parryTimer < parryThreshold) { // parry window is active
 			g2d.setColor(Color.YELLOW);
 		}
+		
+		
 		
 		g2d.fillOval(x, y, size, size);
 	}
@@ -322,6 +331,24 @@ public class Player {
 		slowed = false;
 	}
 	
+	
+	/**
+	 * Enables explode on hit effect
+	 */
+	public void enableExplodeOnHit() {
+		explodeOnHit = true;
+	}
+	
+	/**
+	 * Increase range of explode on hit effect
+	 * @param increase - increase ammount
+	 */
+	public void increaseExplodeOnHitRange(int increase) {
+		explodeOnHitRange += increase;
+		explodeOnHitRaidus = explodeOnHitRange/2;
+	}
+	
+	
 	/**
      * @return returns true if ball has collided with an obstacle
      */
@@ -391,6 +418,11 @@ public class Player {
     			} else {
     				isAlive = false;
     			}
+    			
+    			if (explodeOnHit) {
+    				controller.clearObstaclesFromArea(new CircleHitbox(x-(explodeOnHitRaidus), y-(explodeOnHitRaidus), explodeOnHitRange, explodeOnHitRaidus));
+    				controller.addEffect(new BombEffect(x-(explodeOnHitRaidus), y-(explodeOnHitRaidus), explodeOnHitRange, explodeOnHitRaidus));
+    			}
     		}
     		
     		// Cold aura:
@@ -435,6 +467,13 @@ public class Player {
 				shields--;
 			} else {
 				isAlive = false;
+			}
+    		
+    		timeSinceLastHit = 0;
+    		
+    		if (explodeOnHit) {
+				controller.clearObstaclesFromArea(new CircleHitbox(x-(explodeOnHitRaidus), y-(explodeOnHitRaidus), explodeOnHitRange, explodeOnHitRaidus));
+				controller.addEffect(new BombEffect(x-(explodeOnHitRaidus), y-(explodeOnHitRaidus), explodeOnHitRange, explodeOnHitRaidus));
 			}
     	}
     }

@@ -22,6 +22,7 @@ import playball.obstacles.ObstacleType;
 import playball.obstacles.PowerupEaterObstacle;
 import playball.obstacles.RectangleObstacle;
 import playball.obstacles.SlowAbilityObstacle;
+import playball.obstacles.SpawnerObstacle;
 import playball.obstacles.SpeedAbilityObstacle;
 import playball.obstacles.TrackingCircleObstacle;
 import playball.obstacles.TrackingRectangleObstacle;
@@ -85,6 +86,8 @@ public class GameController implements ActionListener {
     private boolean spawnFriendlyOnSurvive = false;
     private int spawnFirendlyThreshold = 2000;
     private boolean friendlyAlliesTrack = false;
+    private boolean gainShieldOnSurvive = false;
+    private int gainShieldThreshold = 2000;
     
     // Upgrades:
     public enum Upgrade {
@@ -104,12 +107,15 @@ public class GameController implements ActionListener {
     	IMPROVE_SPAWN_FRIENDLY_TYPE,
     	IMPROVE_SPAWN_FRIENDLY_RATE,
     	SPRINT,
-    	INCREASE_SPRINT_STAMINA
+    	INCREASE_SPRINT_STAMINA,
+    	GAIN_SHEILD_ON_SURVIVE,
+    	IMPROVE_SHIELD_GAIN_RATE,
+    	PLAYER_EXPLODE_ON_HIT,
+    	IMPROVE_EXPLODE_ON_HIT_RANGE
     }
     
     public ArrayList<Upgrade> remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
     		Upgrade.PARRY,
-    		Upgrade.TIME_SLOW,
     		Upgrade.SLOW_NEAR,
     		Upgrade.MAX_SHIELDS,
     		Upgrade.MAX_SHIELDS,
@@ -121,7 +127,9 @@ public class GameController implements ActionListener {
     		Upgrade.DROP_FREQUENCY,
     		Upgrade.DROP_FREQUENCY,
     		Upgrade.SPAWN_FRIENDLY,
-    		Upgrade.SPRINT
+    		Upgrade.SPRINT,
+    		Upgrade.GAIN_SHEILD_ON_SURVIVE,
+    		Upgrade.PLAYER_EXPLODE_ON_HIT
     ));
     
     public GameController() {
@@ -259,7 +267,6 @@ public class GameController implements ActionListener {
     	// Reset upgrades:
     	remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
         		Upgrade.PARRY,
-        		Upgrade.TIME_SLOW,
         		Upgrade.SLOW_NEAR,
         		Upgrade.MAX_SHIELDS,
         		Upgrade.MAX_SHIELDS,
@@ -271,7 +278,9 @@ public class GameController implements ActionListener {
         		Upgrade.DROP_FREQUENCY,
         		Upgrade.DROP_FREQUENCY,
         		Upgrade.SPAWN_FRIENDLY,
-        		Upgrade.SPRINT
+        		Upgrade.SPRINT,
+        		Upgrade.GAIN_SHEILD_ON_SURVIVE,
+        		Upgrade.PLAYER_EXPLODE_ON_HIT
         ));
     	
     	// reset upgrades:
@@ -282,6 +291,8 @@ public class GameController implements ActionListener {
     	spawnFriendlyOnSurvive = false;
     	spawnFirendlyThreshold = 2000;
     	friendlyAlliesTrack = false;
+    	gainShieldOnSurvive = false;
+        gainShieldThreshold = 2000;
     	
     	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, false)); // remove parry keybind
     	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.SHIFT_DOWN_MASK, false));
@@ -342,7 +353,7 @@ public class GameController implements ActionListener {
     	if (spawnFriendlyOnSurvive) {
     		if (player.timeSinceLastHit > 0 && player.timeSinceLastHit % spawnFirendlyThreshold == 0) { // if player has survived long enough for ally to spawn\
     			rand = Math.random();
-        		if (rand > 0.5) {
+        		if (rand > 0.5) { // random type
         			if (friendlyAlliesTrack) {
         				addAllyObstacle(ObstacleType.ALLY_TRACKING_CIRCLE, 1);
         			} else {
@@ -355,6 +366,12 @@ public class GameController implements ActionListener {
         				addAllyObstacle(ObstacleType.ALLY_RECT, 1);
         			}
         		}
+    		}
+    	}
+    	
+    	if (gainShieldOnSurvive) {
+    		if (player.timeSinceLastHit > 0 && player.timeSinceLastHit % gainShieldThreshold == 0) {
+    			player.addShields();
     		}
     	}
     	
@@ -476,6 +493,13 @@ public class GameController implements ActionListener {
 				}
 				
 			}
+		}
+		
+		if (level >= 6) {
+			rand = Math.random();
+			if (rand < 0.3) {
+				addObstacle(ObstacleType.SPAWNER, 0);
+			}
 			
 		}
     }
@@ -516,6 +540,9 @@ public class GameController implements ActionListener {
 					break;
 				case POWERUP_EATER:
 					ob = new PowerupEaterObstacle(x, y, this);
+					break;
+				case SPAWNER:
+					ob = new SpawnerObstacle(x, y, 5, this);
 					break;
 				default:
 					System.out.println("Invalid Obstacle Type");
@@ -815,6 +842,25 @@ public class GameController implements ActionListener {
 			break;
 		case INCREASE_SPRINT_STAMINA:
 			player.increaseSprintStamina(50);
+			break;
+		case GAIN_SHEILD_ON_SURVIVE:
+			gainShieldOnSurvive = true;
+	        gainShieldThreshold = 2000;
+	        
+	        remainingUpgrades.add(Upgrade.IMPROVE_SHIELD_GAIN_RATE);
+	        remainingUpgrades.add(Upgrade.IMPROVE_SHIELD_GAIN_RATE);
+			break;
+		case IMPROVE_SHIELD_GAIN_RATE:
+			gainShieldThreshold -= 250;
+			break;
+		case PLAYER_EXPLODE_ON_HIT:
+			player.enableExplodeOnHit();
+			
+			remainingUpgrades.add(Upgrade.IMPROVE_EXPLODE_ON_HIT_RANGE);
+			remainingUpgrades.add(Upgrade.IMPROVE_EXPLODE_ON_HIT_RANGE);
+			break;
+		case IMPROVE_EXPLODE_ON_HIT_RANGE:
+			player.increaseExplodeOnHitRange(50);
 			break;
 		default:
 			System.out.println("Invalid powerup");

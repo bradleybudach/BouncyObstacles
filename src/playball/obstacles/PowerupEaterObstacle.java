@@ -139,7 +139,7 @@ public class PowerupEaterObstacle extends Obstacle {
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.drawImage(icon.getImage(), x, y, null);
 		
-		if (eatingPowerup) {
+		if (eatingPowerup && closestPowerup != null) {
 			g2d.setColor(Color.BLACK);
 			int strokeSize = (int)(10*((double)eatingProcess/eatingTime)); 
 			g2d.setStroke(new BasicStroke(strokeSize));

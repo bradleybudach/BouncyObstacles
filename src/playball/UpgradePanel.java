@@ -153,6 +153,22 @@ public class UpgradePanel extends JPanel {
 			title.setText("<html>Sprint: Increase Stamina</html>");
 			descriptionText.setText("Increase the maximum duration of a sprint by 50.");
 			break;
+		case GAIN_SHEILD_ON_SURVIVE:
+			title.setText("<html>Survival Expert</html>");
+			descriptionText.setText("Gain 1 shield every 2000 score of not getting hit.");
+			break;
+		case IMPROVE_SHIELD_GAIN_RATE:
+			title.setText("<html>Survival Expert: Improve Rate</html>");
+			descriptionText.setText("Improve the rate shield regen if the player is not hit by 250.");
+			break;
+		case PLAYER_EXPLODE_ON_HIT:
+			title.setText("<html>Retaliation</html>");
+			descriptionText.setText("Player explodes on taking damage in a radius of 100 px, destroys all nearby enemies.");
+			break;
+		case IMPROVE_EXPLODE_ON_HIT_RANGE:
+			title.setText("<html>Retaliation : Imrpove Range</html>");
+			descriptionText.setText("Improve the range of the player explosion on hit by 50.");
+			break;
 		default:
 			System.out.println("Invalid powerup");
 			break;
