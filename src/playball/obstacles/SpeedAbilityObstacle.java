@@ -32,7 +32,7 @@ public class SpeedAbilityObstacle extends Obstacle {
 	@Override
 	public void onCollision(ArrayList<Obstacle> obstaclesHit) {
 		obstaclesHit.forEach(o -> {
-			int updatedSpeed = Math.min(controller.enemyMaxSpeed, o.speed+1); // updates speecd, max 5
+			int updatedSpeed = Math.min(controller.enemyMaxSpeed, o.speed+1); // updates speed
 			o.setSpeed(updatedSpeed);
 		});
 		

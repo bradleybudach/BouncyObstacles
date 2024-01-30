@@ -14,7 +14,7 @@ import playball.hitboxes.Hitbox;
 
 public class BombObstacle extends Obstacle {
 	private int slowSpeed;
-	private int explosionDiameter = 200;
+	private int explosionDiameter = 250;
 	private ImageIcon icon;
 	private int radius;
 	

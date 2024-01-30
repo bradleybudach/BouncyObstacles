@@ -17,8 +17,15 @@ public class AllyCircleObstacle extends CircleObstacle {
 
 	@Override
 	public void onCollision(ArrayList<Obstacle> obstaclesHit) {
-		maxCollisions-=obstaclesHit.size();
-		obstaclesHit.forEach(o -> o.remove());
+		int hitCount = 0;
+		for(Obstacle o : obstaclesHit) {
+			if (!o.queueRemove) { // if o is queued to be removed
+				o.remove();
+				hitCount++;
+			}
+		};
+		
+		maxCollisions -= hitCount;
 		
 		if (maxCollisions <= 0) {
 			this.remove();
