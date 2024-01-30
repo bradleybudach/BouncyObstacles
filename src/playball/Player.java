@@ -48,6 +48,9 @@ public class Player {
 	private boolean isParrying = false;
 	private boolean parryConvertsEnemy = false;
 	
+	// No damage timer:
+	public int timeSinceLastHit = 0;
+	
 	public Player(int x, int y) {
 		this.x = x;
 		this.y = y;
@@ -170,6 +173,10 @@ public class Player {
 		g2d.fillOval(x, y, size, size);
 	}
 	
+	
+	/**
+	 * Reset all player values to defaults
+	 */
 	public void reset() {
 		x = 10;
 		y = 10;
@@ -186,6 +193,7 @@ public class Player {
 		parryTimer = 5;
 		isParrying = false;
 		parryConvertsEnemy = false;
+		timeSinceLastHit = 0;
 		slowed = false;
 		speed = 2;
 	}
@@ -347,6 +355,12 @@ public class Player {
     		if (isParrying) { // reset isParrying
     			isParrying = false;
     		}
+		}
+		
+		if (!isHit) {
+			timeSinceLastHit++;
+		} else {
+			timeSinceLastHit = 0;
 		}
     }
     

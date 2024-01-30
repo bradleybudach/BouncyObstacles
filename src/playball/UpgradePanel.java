@@ -38,6 +38,7 @@ public class UpgradePanel extends JPanel {
 		descriptionText.setMargin(new Insets(10, 10, 10, 10));
 		descriptionText.setEditable(false);
 		descriptionText.setLineWrap(true);
+		descriptionText.setWrapStyleWord(true);
 		add(BorderLayout.CENTER, this.descriptionText);
 		
 		add(BorderLayout.SOUTH, submitButton);
@@ -131,6 +132,18 @@ public class UpgradePanel extends JPanel {
 		case DROP_FREQUENCY:
 			title.setText("<html>Increase Drop Frequency</html>");
 			descriptionText.setText("Drops will spawn +100 frames more often.");
+			break;
+		case SPAWN_FRIENDLY:
+			title.setText("<html>Spawn Friendly Obstacle</html>");
+			descriptionText.setText("Spawn a random frienly obstacle if you avoid taking damage for 2000 score.");
+			break;
+		case IMPROVE_SPAWN_FRIENDLY_RATE:
+			title.setText("<html>Spawn Friendly Obstacle: Improve Rate</html>");
+			descriptionText.setText("Improve the rate of friendly obstacle spawns if the player is not hit by 500.");
+			break;
+		case IMPROVE_SPAWN_FRIENDLY_TYPE:
+			title.setText("<html>Spawn Friendly Obstacle: Tracking Type</html>");
+			descriptionText.setText("All allies spawned when the player avoids damage are now seek out nearby obstacles.");
 			break;
 		default:
 			System.out.println("Invalid powerup");

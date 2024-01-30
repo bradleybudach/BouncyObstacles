@@ -10,8 +10,8 @@ import playball.hitboxes.CircleHitbox;
 import playball.hitboxes.RectangleHitbox;
 
 public class AllyBombPowerup extends Powerup {
-	private int diameter = 300;
-	private int radius = 150;
+	private int diameter = 200;
+	private int radius = 100;
 	
 	/**
 	 * Create an ally bomb.

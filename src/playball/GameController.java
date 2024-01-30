@@ -82,8 +82,11 @@ public class GameController implements ActionListener {
     private int allyBounces = 1;
     private double immortalitySpawnChance = 0.05;
     private int immortalityDuration = 300;
-    private int bombRange = 300;
+    private int bombRange = 200;
     private int itemSpawnThreshold = 1000;
+    private boolean spawnFriendlyOnSurvive = false;
+    private int spawnFirendlyThreshold = 2000;
+    private boolean friendlyAlliesTrack = false;
     
     // Upgrades:
     public enum Upgrade {
@@ -98,7 +101,10 @@ public class GameController implements ActionListener {
     	BETTER_IMMORTALITY,
     	BOMB_RANGE,
     	DROP_FREQUENCY,
-    	PARRY_CONVERTS_ALLY
+    	PARRY_CONVERTS_ALLY,
+    	SPAWN_FRIENDLY,
+    	IMPROVE_SPAWN_FRIENDLY_TYPE,
+    	IMPROVE_SPAWN_FRIENDLY_RATE
     }
     
     public ArrayList<Upgrade> remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
@@ -109,12 +115,12 @@ public class GameController implements ActionListener {
     		Upgrade.MAX_SHIELDS,
     		Upgrade.MAX_SHIELDS,
     		Upgrade.INCREASE_ALLY_BOUNCES,
-    		Upgrade.INCREASE_ALLY_BOUNCES,
     		Upgrade.BETTER_IMMORTALITY,
     		Upgrade.BOMB_RANGE,
     		Upgrade.BOMB_RANGE,
     		Upgrade.DROP_FREQUENCY,
-    		Upgrade.DROP_FREQUENCY
+    		Upgrade.DROP_FREQUENCY,
+    		Upgrade.SPAWN_FRIENDLY
     ));
     
     public GameController() {
@@ -211,6 +217,7 @@ public class GameController implements ActionListener {
 			}
         });
         
+       
         addObstacle(ObstacleType.RECTANGLE, 1);
         player.setController(this);
         t = new Timer(15, this);
@@ -242,18 +249,38 @@ public class GameController implements ActionListener {
     		}
     		
     		rand = Math.random();
-    		if (rand > 0.85) {
+    		if (rand > 0.9) {
     			addPowerup(PowerupType.ALLY_BOMB);
     		}
     		
     		rand = Math.random();
-    		if (rand > 0.85) {
+    		if (rand > 0.9) {
     			addPowerup(PowerupType.BOMB);
     		}
     		
     		rand = Math.random();
     		if (rand > 0.4) {
     			addPowerup(PowerupType.SHIELD);
+    		}
+    	}
+    	
+    	
+    	if (spawnFriendlyOnSurvive) {
+    		if (player.timeSinceLastHit > 0 && player.timeSinceLastHit % spawnFirendlyThreshold == 0) { // if player has survived long enough for ally to spawn\
+    			rand = Math.random();
+        		if (rand > 0.5) {
+        			if (friendlyAlliesTrack) {
+        				addAllyObstacle(ObstacleType.ALLY_TRACKING_CIRCLE, 1);
+        			} else {
+        				addAllyObstacle(ObstacleType.ALLY_CIRCLE, 1);
+        			}
+        		} else {
+        			if (friendlyAlliesTrack) {
+        				addAllyObstacle(ObstacleType.ALLY_TRACKING_RECT, 1);
+        			} else {
+        				addAllyObstacle(ObstacleType.ALLY_RECT, 1);
+        			}
+        		}
     		}
     	}
     	
@@ -346,13 +373,13 @@ public class GameController implements ActionListener {
 		
 		if (level >= 5) {
 			rand = Math.random();
-			if (rand < 0.15) {
+			if (rand < 0.25) {
 				rand = Math.random();
 				
 				if (rand < 0.5) {
-					addObstacle(ObstacleType.TRACKING_RECT, speed);
+					addObstacle(ObstacleType.TRACKING_RECT, speed/2);
 				} else {
-					addObstacle(ObstacleType.TRACKING_CIRCLE, speed);
+					addObstacle(ObstacleType.TRACKING_CIRCLE, speed/2);
 				}
 				
 			}
@@ -408,6 +435,43 @@ public class GameController implements ActionListener {
 				obstacles.add(ob); // add the new obstacle to the list
 			}
 		}
+    }
+    
+    /**
+     * Adds an ally obstacle of the given type
+     * 
+     * @param type - OpstacleType
+     * @param speed - move speed
+     */
+    public void addAllyObstacle(ObstacleType type, int speed) {
+    	Obstacle ob;
+    	int width = (int) Math.floor(Math.random()*100+5);
+		int height = (int) Math.floor(Math.random()*100+5);
+		int x = (int) Math.floor(Math.random()*screenDimension.width+1);
+		int y = (int) Math.floor(Math.random()*screenDimension.height+1);
+		
+		
+		//TODO: change type to enum
+		switch (type) {
+			case ALLY_RECT:
+				ob = new AllyRectangleObstacle(width, height, x, y, speed, new Direction(), allyBounces);
+				break;
+			case ALLY_CIRCLE:
+				ob = new AllyCircleObstacle(height, x, y, speed, new Direction(), allyBounces);
+				break;
+			case ALLY_TRACKING_RECT:
+				ob = new AllyTrackingRectangleObstacle(width, height, x, y, speed, new Direction(), this, allyBounces);
+				break;
+			case ALLY_TRACKING_CIRCLE:
+				ob = new AllyTrackingCircleObstacle(height, x, y, speed, new Direction(), this, allyBounces);
+				break;
+			default:
+				System.out.println("Invalid Obstacle Type");
+				return;
+		}
+		
+		allyObstacles.add(ob); // add the new obstacle to the list
+    
     }
     
     /**
@@ -707,6 +771,18 @@ public class GameController implements ActionListener {
 		case DROP_FREQUENCY:
 			itemSpawnThreshold -= 100;
 			break;
+		case SPAWN_FRIENDLY:
+			spawnFriendlyOnSurvive = true;
+			spawnFirendlyThreshold = 2000;
+			remainingUpgrades.add(Upgrade.IMPROVE_SPAWN_FRIENDLY_RATE);
+			remainingUpgrades.add(Upgrade.IMPROVE_SPAWN_FRIENDLY_TYPE);
+			break;
+		case IMPROVE_SPAWN_FRIENDLY_RATE:
+			spawnFirendlyThreshold -= 500;
+			break;
+		case IMPROVE_SPAWN_FRIENDLY_TYPE:
+			friendlyAlliesTrack = true;
+			break;
 		default:
 			System.out.println("Invalid powerup");
 			break;
@@ -757,7 +833,6 @@ public class GameController implements ActionListener {
         		Upgrade.MAX_SHIELDS,
         		Upgrade.MAX_SHIELDS,
         		Upgrade.INCREASE_ALLY_BOUNCES,
-        		Upgrade.INCREASE_ALLY_BOUNCES,
         		Upgrade.BETTER_IMMORTALITY,
         		Upgrade.BOMB_RANGE,
         		Upgrade.BOMB_RANGE,
@@ -765,11 +840,15 @@ public class GameController implements ActionListener {
         		Upgrade.DROP_FREQUENCY
         ));
     	
-    	
+    	// reset upgrades:
     	immortalityDuration = 300;
     	immortalitySpawnChance = 0.05;
     	allyBounces = 1;
     	itemSpawnThreshold = 1000;
+    	spawnFriendlyOnSurvive = false;
+    	spawnFirendlyThreshold = 2000;
+    	friendlyAlliesTrack = false;
+    	
     	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0)); // remove parry keybind
     	
     	addObstacle(ObstacleType.RECTANGLE, 1);
