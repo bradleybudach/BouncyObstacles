@@ -36,6 +36,11 @@ public abstract class Hitbox {
 		updateHitbox();
 	}
 	
+	public void updateSize(int width, int height) {
+		this.width = width;
+		this.height = height;
+	}
+	
 	public abstract Direction checkCollision(Hitbox target);
 	protected abstract void updateHitbox();
 }

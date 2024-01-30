@@ -20,7 +20,7 @@ public class TrackingCircleObstacle extends CircleObstacle {
 		// Track player:
 		Player p = controller.player;
 		
-		if (controller.score % 25 == 0) { // tracking rate
+		if (controller.score % 10 == 0) { // tracking rate
 			if (p.x < this.x) {
 				dir.setLeft();
 			} else {

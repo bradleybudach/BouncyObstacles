@@ -66,36 +66,24 @@ class DrawPanel extends JPanel {
     	controller.player.move(screenDimension);
     	
         // Move Obstacles
-        for (Obstacle o : controller.obstacles) {
-    		o.move(screenDimension);
-    	}
+    	controller.obstacles.forEach(o -> o.move(screenDimension)); // move all obstacles
         
-        for (Obstacle o : controller.allyObstacles) {
-        	o.move(screenDimension);
-        }
+        controller.allyObstacles.forEach(o -> o.move(screenDimension)); // move all allies
         
         // Check Collisions
         controller.player.checkCollisions(controller.obstacles);
         
         // Check Obstacle Collisions
-        for (Obstacle o : controller.obstacles) {
-        	o.checkObstacleCollisions(controller.obstacles);
-        }
+        controller.obstacles.forEach(o -> {
+        	o.checkObstacleCollisions(controller.obstacles); // check obstacle bounces with eachother
+        });
         
-        for (Obstacle o : controller.allyObstacles) {
+        controller.allyObstacles.forEach(o -> {
         	o.checkObstacleCollisions(controller.obstacles); // check collision with other obstacles
         	o.checkHitboxCollision(controller.player.getHitbox()); // check collision with player
-        }
+        });
         
-        
-        
-        ArrayList<Powerup> removeList = new ArrayList<Powerup>();
-        for (Powerup p : controller.powerups) {
-        	if (p.checkPlayerCollision(controller)) {
-        		removeList.add(p);
-        	}
-        }
-        controller.powerups.removeAll(removeList);
+        controller.powerups.forEach(p -> p.checkPlayerCollision(controller)); // check powerup collisions
         
         repaint();
         

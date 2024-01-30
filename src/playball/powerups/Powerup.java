@@ -13,6 +13,7 @@ public abstract class Powerup {
 	public int height;
 	public int x;
 	public int y;
+	public boolean queueRemove = false;
 	
 	public Hitbox hitbox;
 	
@@ -33,13 +34,15 @@ public abstract class Powerup {
 		g.drawImage(icon.getImage(), x, y, null);
 	}
 	
-	public boolean checkPlayerCollision(GameController g) {
+	public void checkPlayerCollision(GameController g) {
 		if (hitbox.checkCollision(g.player.getHitbox()) != null) {
 			activate(g);
-			return true;
+			remove();
 		}
-		
-		return false;
+	}
+	
+	public void remove() {
+		queueRemove = true;
 	}
 	
 	public abstract void activate(GameController g);

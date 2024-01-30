@@ -45,7 +45,6 @@ public class SpeedEffect extends Effect {
 		for (Obstacle o : obstacles) {
 			g2d.drawImage(speedImage.getImage(), o.getHitbox().getCenterX()-12, o.getHitbox().getCenterY()-12, null);
 		}
-		
 	}
 
 }

@@ -22,7 +22,7 @@ public class AllyTrackingCircleObstacle extends TrackingCircleObstacle {
 	@Override 
 	public void move(Dimension screenDimension) {	
 		// Track obstacles:
-		if (controller.score % 25 == 0) {
+		if (controller.score % 10 == 0) {
 			double minDist = Integer.MAX_VALUE;
 			Obstacle closestObstacle = null;
 			for (Obstacle o : controller.obstacles) {

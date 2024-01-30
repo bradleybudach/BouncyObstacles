@@ -20,6 +20,7 @@ import playball.obstacles.BombObstacle;
 import playball.obstacles.CircleObstacle;
 import playball.obstacles.Obstacle;
 import playball.obstacles.ObstacleType;
+import playball.obstacles.PowerupEaterObstacle;
 import playball.obstacles.RectangleObstacle;
 import playball.obstacles.SlowAbilityObstacle;
 import playball.obstacles.SpeedAbilityObstacle;
@@ -138,7 +139,6 @@ public class GameController implements ActionListener {
         gameInfo.add(lvlLbl);
         topSection.add(gameInfo);
         
-        
         lblUpgrades.setFont(new Font("Tahoma", Font.BOLD, 26));;
         lblUpgrades.setVisible(false);
         topSection.add(lblUpgrades);
@@ -174,7 +174,7 @@ public class GameController implements ActionListener {
         actionMap.put("moveRight", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				setDirection("RIGHT");
+				player.setDirection("RIGHT");
 			}
         });
         
@@ -184,7 +184,7 @@ public class GameController implements ActionListener {
         actionMap.put("moveLeft", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				setDirection("LEFT");
+				player.setDirection("LEFT");
 			}
         });
         
@@ -194,7 +194,7 @@ public class GameController implements ActionListener {
         actionMap.put("moveUp", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				setDirection("UP");
+				player.setDirection("UP");
 			}
         });
         
@@ -204,7 +204,7 @@ public class GameController implements ActionListener {
         actionMap.put("moveDown", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				setDirection("DOWN");
+				player.setDirection("DOWN");
 			}
         });
         
@@ -217,15 +217,62 @@ public class GameController implements ActionListener {
 			}
         });
         
-       
         addObstacle(ObstacleType.RECTANGLE, 1);
         player.setController(this);
         t = new Timer(15, this);
         t.start();
     }
     
-    public void doit()
-    {
+    /**
+     * Resets the game to its starting state
+     */
+    public void resetGame() {
+    	// Clear components:
+    	obstacles.clear();
+    	allyObstacles.clear();
+    	powerups.clear();
+    	effects.clear();
+    	
+    	// Reset upgrades:
+    	remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
+        		Upgrade.PARRY,
+        		Upgrade.TIME_SLOW,
+        		Upgrade.SLOW_NEAR,
+        		Upgrade.MAX_SHIELDS,
+        		Upgrade.MAX_SHIELDS,
+        		Upgrade.MAX_SHIELDS,
+        		Upgrade.INCREASE_ALLY_BOUNCES,
+        		Upgrade.BETTER_IMMORTALITY,
+        		Upgrade.BOMB_RANGE,
+        		Upgrade.BOMB_RANGE,
+        		Upgrade.DROP_FREQUENCY,
+        		Upgrade.DROP_FREQUENCY,
+        		Upgrade.SPAWN_FRIENDLY
+        ));
+    	
+    	// reset upgrades:
+    	immortalityDuration = 300;
+    	immortalitySpawnChance = 0.05;
+    	allyBounces = 1;
+    	itemSpawnThreshold = 1000;
+    	spawnFriendlyOnSurvive = false;
+    	spawnFirendlyThreshold = 2000;
+    	friendlyAlliesTrack = false;
+    	
+    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0)); // remove parry keybind
+    	
+    	addObstacle(ObstacleType.RECTANGLE, 1);
+    	player.reset();
+    	gameEnded = false;
+		score = 0;
+		enemyMaxSpeed = 2;
+    	level = 1;
+    	lvlLbl.setText("Level: " + 1);
+    	spawnTimer = 500;
+		t.start();
+    }
+    
+    public void gameUpdate() {
     	// update score:
     	score++;
     	scoreLbl.setText("Score: " + score);
@@ -319,6 +366,15 @@ public class GameController implements ActionListener {
     	allyObstacles.removeAll(removeList);
     	
     	
+    	// Remove any powerups that the player has picked up:
+    	ArrayList<Powerup> removePowerupList = new ArrayList<Powerup>();
+    	for (Powerup p : powerups) {
+    		if (p.queueRemove) {
+    			removePowerupList.add(p);
+    		}
+    	}
+    	powerups.removeAll(removePowerupList);
+    	
     	// run the next frame until game over:
     	if (!d.runFrame()) {
     		go = false;
@@ -329,6 +385,9 @@ public class GameController implements ActionListener {
     	}
     }
     
+    /**
+     * Spawns obstacles based on the current level
+     */
     public void spawnObstacles() {
     	// random speed:
     	int max_s = ((int) score/8000) + 1;
@@ -371,15 +430,22 @@ public class GameController implements ActionListener {
 			}
 		}
 		
+		if (level >= 4) {
+			rand = Math.random();
+			if (rand < 0.1) {
+				addObstacle(ObstacleType.POWERUP_EATER, 0);
+			}
+		}
+		
 		if (level >= 5) {
 			rand = Math.random();
 			if (rand < 0.25) {
 				rand = Math.random();
 				
 				if (rand < 0.5) {
-					addObstacle(ObstacleType.TRACKING_RECT, speed/2);
+					addObstacle(ObstacleType.TRACKING_RECT, Math.max(speed/2, 1));
 				} else {
-					addObstacle(ObstacleType.TRACKING_CIRCLE, speed/2);
+					addObstacle(ObstacleType.TRACKING_CIRCLE, Math.max(speed/2, 1));
 				}
 				
 			}
@@ -399,8 +465,6 @@ public class GameController implements ActionListener {
 			int x = (int) Math.floor(Math.random()*screenDimension.width+1);
 			int y = (int) Math.floor(Math.random()*screenDimension.height+1);
 			
-			
-			//TODO: change type to enum
 			switch (type) {
 				case RECTANGLE:
 					ob = new RectangleObstacle(width, height, x, y, speed, new Direction());
@@ -422,6 +486,9 @@ public class GameController implements ActionListener {
 					break;
 				case SPEED_ABILITY:
 					ob = new SpeedAbilityObstacle(x, y, 2, new Direction(), this);
+					break;
+				case POWERUP_EATER:
+					ob = new PowerupEaterObstacle(x, y, this);
 					break;
 				default:
 					System.out.println("Invalid Obstacle Type");
@@ -450,8 +517,6 @@ public class GameController implements ActionListener {
 		int x = (int) Math.floor(Math.random()*screenDimension.width+1);
 		int y = (int) Math.floor(Math.random()*screenDimension.height+1);
 		
-		
-		//TODO: change type to enum
 		switch (type) {
 			case ALLY_RECT:
 				ob = new AllyRectangleObstacle(width, height, x, y, speed, new Direction(), allyBounces);
@@ -474,86 +539,10 @@ public class GameController implements ActionListener {
     
     }
     
+    
+    // Upgrades:
     /**
-     * Removes all controller.obstacles from a given hitbox area
-     * 
-     * @param area - area to delete obstacles from
-     */
-    public void clearObstaclesFromArea(Hitbox area) {
-    	for (Obstacle o : obstacles) {
-    		if (area.checkCollision(o.getHitbox()) != null) {
-    			o.remove();
-    		}
-    	}
-    }
-    
-    /**
-     * Converts all obstacles in the given area to allies
-     * 
-     * @param area - area to convert obstacles
-     */
-    public void convertObstaclesInArea(Hitbox area) {
-    	for (Obstacle o : obstacles) {
-    		if (area.checkCollision(o.getHitbox()) != null) {
-    			convertObstacleToAlly(o);
-    		}
-    	}
-    }
-    
-    public void convertObstacleToAlly(Obstacle o) {
-    	System.out.println("Convert?");
-    	if (o instanceof CircleObstacle) {
-			if (o instanceof TrackingCircleObstacle) {
-				allyObstacles.add(new AllyTrackingCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, this, allyBounces));
-			} else {
-				allyObstacles.add(new AllyCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, allyBounces));
-			}
-		} else if (o instanceof RectangleObstacle) {
-			if (o instanceof TrackingRectangleObstacle) {
-				allyObstacles.add(new AllyTrackingRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, this, allyBounces));
-			} else {
-				allyObstacles.add(new AllyRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, allyBounces));
-			}
-		}
-		// TODO: AllySlowObstacles
-		
-		o.remove();
-    }
-    
-	/**
-	 * Adds a powerup to the screen of a given type
-	 * @param type - PowerupType
-	 */
-    public void addPowerup(PowerupType type) {
-    	int x = (int) Math.floor(Math.random()*(screenDimension.width-10))+5;
-		int y = (int) Math.floor(Math.random()*(screenDimension.height-10))+5;
-    	
-    	switch (type) {
-	    	case SHIELD:
-	    		powerups.add(new ShieldPowerup(x, y)); 
-	    		break;
-	    	case BOMB:
-	    		powerups.add(new BombPowerup(x, y, bombRange));
-	    		break;
-	    	case SLOW:
-	    		powerups.add(new ObstacleSlowPowerup(x, y));
-	    		break;
-	    	case IMMORTALITY:
-	    		powerups.add(new ImmortalityPowerup(x, y, immortalityDuration));
-	    		break;
-	    	case ALLY_BOMB:
-	    		powerups.add(new AllyBombPowerup(x, y, bombRange));
-		default:
-			break;
-    	}
-    }
-    
-    public void addEffect(Effect e) {
-    	effects.add(e);
-    }
-    
-    /**
-     * Pauses game and allows selection of 2 upgrades.
+     * Pauses game and allows selection of 2 upgrades from a list of 4 random ones
      */
     public void getUpgrade() {
     	if (remainingUpgrades.size() == 0) {
@@ -789,84 +778,11 @@ public class GameController implements ActionListener {
     	}
     }
     
-    /**
-     * @param direction - sets the direction of the ball
-     */
-    public void setDirection(String direction) {
-    	switch (direction) {
-    		case "UP":
-    			player.orientation.setNone();
-    			player.orientation.setUp();
-    			break;
-    		case "DOWN":
-    			player.orientation.setNone();
-    			player.orientation.setDown();
-    			break;
-    		case "LEFT":
-    			player.orientation.setNone();
-    			player.orientation.setLeft();
-    			break;
-    		case "RIGHT":
-    			player.orientation.setNone();
-    			player.orientation.setRight();
-    			break;
-    		default:
-    			player.orientation.setNone();
-    			player.orientation.setRight();
-    			break;
-    	}
-    }
-
-    public void resetGame() {
-    	// Clear components:
-    	obstacles.clear();
-    	allyObstacles.clear();
-    	powerups.clear();
-    	effects.clear();
-    	
-    	// Reset upgrades:
-    	remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
-        		Upgrade.PARRY,
-        		Upgrade.TIME_SLOW,
-        		Upgrade.SLOW_NEAR,
-        		Upgrade.MAX_SHIELDS,
-        		Upgrade.MAX_SHIELDS,
-        		Upgrade.MAX_SHIELDS,
-        		Upgrade.INCREASE_ALLY_BOUNCES,
-        		Upgrade.BETTER_IMMORTALITY,
-        		Upgrade.BOMB_RANGE,
-        		Upgrade.BOMB_RANGE,
-        		Upgrade.DROP_FREQUENCY,
-        		Upgrade.DROP_FREQUENCY
-        ));
-    	
-    	// reset upgrades:
-    	immortalityDuration = 300;
-    	immortalitySpawnChance = 0.05;
-    	allyBounces = 1;
-    	itemSpawnThreshold = 1000;
-    	spawnFriendlyOnSurvive = false;
-    	spawnFirendlyThreshold = 2000;
-    	friendlyAlliesTrack = false;
-    	
-    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0)); // remove parry keybind
-    	
-    	addObstacle(ObstacleType.RECTANGLE, 1);
-    	player.reset();
-    	gameEnded = false;
-		score = 0;
-		enemyMaxSpeed = 2;
-    	level = 1;
-    	lvlLbl.setText("Level: " + 1);
-    	spawnTimer = 500;
-		t.start();
-    }
-    
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() instanceof Timer) {
 			if (go) { // update each frame of the game
-				doit();
+				gameUpdate();
 			}
 		}
 		else if (e.getSource() instanceof JButton) {
@@ -887,4 +803,92 @@ public class GameController implements ActionListener {
 				
 		}
 	}
+	
+	
+	// Special Effects:
+	/**
+	 * Adds a powerup to the screen of a given type
+	 * @param type - PowerupType
+	 */
+    public void addPowerup(PowerupType type) {
+    	int x = (int) Math.floor(Math.random()*(screenDimension.width-10))+5;
+		int y = (int) Math.floor(Math.random()*(screenDimension.height-10))+5;
+    	
+    	switch (type) {
+	    	case SHIELD:
+	    		powerups.add(new ShieldPowerup(x, y)); 
+	    		break;
+	    	case BOMB:
+	    		powerups.add(new BombPowerup(x, y, bombRange));
+	    		break;
+	    	case SLOW:
+	    		powerups.add(new ObstacleSlowPowerup(x, y));
+	    		break;
+	    	case IMMORTALITY:
+	    		powerups.add(new ImmortalityPowerup(x, y, immortalityDuration));
+	    		break;
+	    	case ALLY_BOMB:
+	    		powerups.add(new AllyBombPowerup(x, y, bombRange));
+		default:
+			break;
+    	}
+    }
+    
+    /**
+     * Adds a given effect to be rendered
+     * @param e - effect
+     */
+    public void addEffect(Effect e) {
+    	effects.add(e);
+    }
+	
+	/**
+     * Removes all controller.obstacles from a given hitbox area
+     * 
+     * @param area - area to delete obstacles from
+     */
+    public void clearObstaclesFromArea(Hitbox area) {
+    	for (Obstacle o : obstacles) {
+    		if (area.checkCollision(o.getHitbox()) != null) {
+    			o.remove();
+    		}
+    	}
+    }
+    
+    /**
+     * Converts all obstacles in the given area to allies
+     * 
+     * @param area - area to convert obstacles
+     */
+    public void convertObstaclesInArea(Hitbox area) {
+    	for (Obstacle o : obstacles) {
+    		if (area.checkCollision(o.getHitbox()) != null) {
+    			convertObstacleToAlly(o);
+    		}
+    	}
+    }
+    
+    /**
+     * Converts a given obstacle into an ally of the same type (if applicable)
+     * @param o - obstacle to be converted
+     */
+    public void convertObstacleToAlly(Obstacle o) {
+    	if (o instanceof CircleObstacle) {
+			if (o instanceof TrackingCircleObstacle) {
+				allyObstacles.add(new AllyTrackingCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, this, allyBounces));
+			} else {
+				allyObstacles.add(new AllyCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, allyBounces));
+			}
+		} else if (o instanceof RectangleObstacle) {
+			if (o instanceof TrackingRectangleObstacle) {
+				allyObstacles.add(new AllyTrackingRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, this, allyBounces));
+			} else {
+				allyObstacles.add(new AllyRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, allyBounces));
+			}
+		}
+		// TODO: AllySlowObstacles
+		
+		o.remove();
+    }
+    
 }

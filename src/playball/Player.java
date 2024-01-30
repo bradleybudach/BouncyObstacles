@@ -387,6 +387,34 @@ public class Player {
     }
     
     /**
+     * @param direction - sets the direction of the ball
+     */
+    public void setDirection(String direction) {
+    	switch (direction) {
+    		case "UP":
+    			orientation.setNone();
+    			orientation.setUp();
+    			break;
+    		case "DOWN":
+    			orientation.setNone();
+    			orientation.setDown();
+    			break;
+    		case "LEFT":
+    			orientation.setNone();
+    			orientation.setLeft();
+    			break;
+    		case "RIGHT":
+    			orientation.setNone();
+    			orientation.setRight();
+    			break;
+    		default:
+    			orientation.setNone();
+    			orientation.setRight();
+    			break;
+    	}
+    }
+    
+    /**
      * @return the players hitbox
      */
     public CircleHitbox getHitbox() {

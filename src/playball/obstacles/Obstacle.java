@@ -181,6 +181,10 @@ public abstract class Obstacle {
 	}
 	
 	public void runMoveSteps() {
+		if (dir.moveSteps.size() == 0) { // no movement
+			return;
+		}
+		
 		for (int i = 0; i < speed; i++) {
         	currentMoveStep = (currentMoveStep + 1) % dir.moveSteps.size();
         	switch (dir.moveSteps.get(currentMoveStep)) {

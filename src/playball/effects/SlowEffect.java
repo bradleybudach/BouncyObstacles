@@ -45,9 +45,7 @@ public class SlowEffect extends Effect {
 		
 		for (Obstacle o : obstacles) {
 			g2d.drawImage(slowImage.getImage(), o.getHitbox().getCenterX()-12, o.getHitbox().getCenterY()-12, null);
-			//g.fillOval(o.getHitbox().getCenterX()-15, o.getHitbox().getCenterY()-15, 30, 30);
 		}
-		
 	}
 
 }
