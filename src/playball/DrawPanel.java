@@ -53,7 +53,6 @@ class DrawPanel extends JPanel {
         }
         controller.effects.removeAll(removeList);
         
-        
         g.dispose();
     }
 

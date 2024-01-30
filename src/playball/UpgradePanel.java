@@ -11,6 +11,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 import playball.GameController.Upgrade;
 
@@ -18,36 +20,38 @@ public class UpgradePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private JLabel title = new JLabel();
-	private JTextArea descriptionTest = new JTextArea();
-	private JButton submitButton = new JButton("Select");
+	private JTextArea descriptionText = new JTextArea();
+	private JButton submitButton = new JButton("Select Upgrade");
 	private Upgrade upgrade;
+	private Color greenColor = new Color(144, 238, 144);
+	private Color whiteColor = new Color(240, 240, 240);
 	
 	public UpgradePanel() {
 		super();
 		setLayout(new BorderLayout(0, 10));
-		setBackground(new Color(32, 32, 32));
-		
-		title.setForeground(Color.WHITE);
 		title.setHorizontalAlignment(SwingConstants.CENTER);
 		title.setVerticalAlignment(SwingConstants.CENTER);
 		title.setFont(new Font("Tahoma", Font.BOLD, 16));
+		title.setBorder(new EmptyBorder(10,10,10,10));
 		add(BorderLayout.NORTH, this.title);
 		
-		descriptionTest.setMargin(new Insets(10, 10, 10, 10));
-		descriptionTest.setBackground(new Color(32, 32, 32));
-		descriptionTest.setForeground(Color.WHITE);
-		descriptionTest.setEditable(false);
-		descriptionTest.setLineWrap(true);
-		add(BorderLayout.CENTER, this.descriptionTest);
+		descriptionText.setMargin(new Insets(10, 10, 10, 10));
+		descriptionText.setEditable(false);
+		descriptionText.setLineWrap(true);
+		add(BorderLayout.CENTER, this.descriptionText);
 		
 		add(BorderLayout.SOUTH, submitButton);
+		
+		setBorder(new LineBorder(Color.BLACK));
 	}
 	
 	public void setActionListener(ActionListener al) {
 		submitButton.addActionListener(al);
-		submitButton.setVisible(true);
 	}
 	
+	/**
+	 * Removes the action listener from the button in this panel if there is one.
+	 */
 	public void removeActionListener() {
 		if (submitButton.getActionListeners().length == 0) {
 			return;
@@ -55,69 +59,89 @@ public class UpgradePanel extends JPanel {
 		
 		
 		submitButton.removeActionListener(submitButton.getActionListeners()[0]);
-		submitButton.setVisible(false);
+		//submitButton.setVisible(false);
+		
+		// UI Changes:
+		submitButton.setText("Selected");
+		setBackground(greenColor);
+		descriptionText.setBackground(greenColor);
 	}
 	
+	/**
+	 * Returns the upgrade saved in this panel
+	 * @return upgrade
+	 */
 	public Upgrade getUpgrade() {
 		return upgrade;
 	}
 	
+	
+	/**
+	 * Updates the panel to display a new upgrade
+	 * @param upgrade - new upgrade to display
+	 */
 	public void setValues(Upgrade upgrade) {
 		this.upgrade = upgrade;
 		
 		switch (upgrade) {
 		case PARRY:
 			title.setText("<html>Parry</html>");
-			descriptionTest.setText("Press Q within 5 frames of getting hit to parry an enemy and survive the hit, bouncing yourself in the opposite direction.");
+			descriptionText.setText("Press Q within 5 frames of getting hit to parry an enemy and survive the hit, bouncing yourself in the opposite direction.");
 			break;
 		case INCREASE_PARRY_WINDOW:
 			title.setText("<html>Parry: Increase Window</html>");
-			descriptionTest.setText("Increase the window you have to parry enemies by 2 frames.");
+			descriptionText.setText("Increase the window you have to parry enemies by 2 frames.");
 			break;
 		case PARRY_CONVERTS_ALLY:
 			title.setText("<html>Parry: Convert Ally</html>");
-			descriptionTest.setText("Instead of destroying an enemy on a parry, convert it to be an ally.");
+			descriptionText.setText("Instead of destroying an enemy on a parry, convert it to be an ally.");
 			break;
 		case TIME_SLOW:
 			title.setText("<html>Time Slow</html>");
-			descriptionTest.setText("Press [btn] to slow time briefly.");
+			descriptionText.setText("Press [btn] to slow time briefly.");
 			break;
 		case INCREASE_TIME_SLOW_DURATION:
 			title.setText("<html>Time Slow: Increase Duration</html>");
-			descriptionTest.setText("Increase the maximum duration of the time slow by +50");
+			descriptionText.setText("Increase the maximum duration of the time slow by +50");
 			break;
 		case SLOW_NEAR:
 			title.setText("<html>Slow Near</html>");
-			descriptionTest.setText("Slow all enemies that get within a radius of 50 px.");
+			descriptionText.setText("Slow all enemies that get within a radius of 50 px.");
 			break;
 		case INCREASE_SLOW_NEAR_RANGE:
 			title.setText("<html>Slow Near: Increase Range</html>");
-			descriptionTest.setText("Increase the range of the slow near effect by 10.");
+			descriptionText.setText("Increase the range of the slow near effect by 10.");
 			break;
 		case MAX_SHIELDS:
 			title.setText("<html>Increase Max Shields</html>");
-			descriptionTest.setText("+1 to max shields.");
+			descriptionText.setText("+1 to max shields.");
 			break;
 		case INCREASE_ALLY_BOUNCES:
 			title.setText("<html>Increase Ally Bounces</html>");
-			descriptionTest.setText("+1 bounces to allied obstacles.");
+			descriptionText.setText("+1 bounces to allied obstacles.");
 			break;
 		case BETTER_IMMORTALITY:
 			title.setText("<html>Better Immortality</html>");
-			descriptionTest.setText("Immortality powerup is 10% more likely to spawn and has an its duration increased by 100.");
+			descriptionText.setText("Immortality powerup is 10% more likely to spawn and has an its duration increased by 100.");
 			break;
 		case BOMB_RANGE:
 			title.setText("<html>Increase Bomb Range</html>");
-			descriptionTest.setText("Increase the range of all bombs by +50.");
+			descriptionText.setText("Increase the range of all bombs by +50.");
 			break;
 		case DROP_FREQUENCY:
 			title.setText("<html>Increase Drop Frequency</html>");
-			descriptionTest.setText("Drops will spawn +100 frames more often.");
+			descriptionText.setText("Drops will spawn +100 frames more often.");
 			break;
 		default:
 			System.out.println("Invalid powerup");
 			break;
 		}
+		
+
+		// Update other UI:
+		submitButton.setText("Select Upgrade"); 
+		setBackground(whiteColor);
+		descriptionText.setBackground(whiteColor);
 	}
 
 }

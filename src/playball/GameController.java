@@ -43,11 +43,14 @@ public class GameController implements ActionListener {
     DrawPanel d;
     boolean play = true;
     boolean go = false;
-    JPanel c = new JPanel();
-    JButton start = new JButton("START");
-    JButton stop = new JButton("STOP");
-    JLabel scoreLbl = new JLabel("Score: 0");
-    JLabel lvlLbl = new JLabel("Level: 1");
+    private JPanel topSection = new JPanel();
+    private JPanel gameInfo = new JPanel();
+    private JButton start = new JButton("START");
+    private JButton stop = new JButton("STOP");
+    private JLabel scoreLbl = new JLabel("Score: 0");
+    private JLabel lvlLbl = new JLabel("Level: 1");
+    private JLabel lblUpgrades = new JLabel("Select 2 Upgrades");
+    
     JPanel cards = new JPanel();
     JPanel upgradePanel = new JPanel();
     UpgradePanel upgrade_one = new UpgradePanel();
@@ -120,13 +123,19 @@ public class GameController implements ActionListener {
 
         d = new DrawPanel(this);
 
-        c.setPreferredSize(new Dimension(100,100));
-        frame.getContentPane().add(BorderLayout.NORTH, c);
+        topSection.setPreferredSize(new Dimension(100,100));
+        frame.getContentPane().add(BorderLayout.NORTH, topSection);
         
-        c.add(start);
-        c.add(stop);
-        c.add(scoreLbl);
-        c.add(lvlLbl);
+        gameInfo.add(start);
+        gameInfo.add(stop);
+        gameInfo.add(scoreLbl);
+        gameInfo.add(lvlLbl);
+        topSection.add(gameInfo);
+        
+        
+        lblUpgrades.setFont(new Font("Tahoma", Font.BOLD, 26));;
+        lblUpgrades.setVisible(false);
+        topSection.add(lblUpgrades);
         
         upgradePanel.setLayout(new GridLayout(0, 4, 0, 0));
         upgradePanel.add(upgrade_one);
@@ -428,6 +437,7 @@ public class GameController implements ActionListener {
     }
     
     public void convertObstacleToAlly(Obstacle o) {
+    	System.out.println("Convert?");
     	if (o instanceof CircleObstacle) {
 			if (o instanceof TrackingCircleObstacle) {
 				allyObstacles.add(new AllyTrackingCircleObstacle(o.width, o.x, o.y, o.speed, o.dir, this, allyBounces));
@@ -592,7 +602,13 @@ public class GameController implements ActionListener {
 						remainingUpgrades.add(upgrade_four.getUpgrade()); // re-ad not chosen upgrade
 					}
 					
+					
+					// UI updates:
+					gameInfo.setVisible(true);
+			    	lblUpgrades.setVisible(false);
 					cl.show(cards, "GameScreen");
+					
+					// Continue Game:
 					player.setImmortal(30);
 					t.start();
 				}
@@ -629,6 +645,9 @@ public class GameController implements ActionListener {
     	}
     	
     	
+    	// UI Changes:
+    	gameInfo.setVisible(false);
+    	lblUpgrades.setVisible(true);
     	cl.show(cards, "UpgradeScreen"); // display upgrade screen with upgrade options
     }
     
@@ -759,6 +778,7 @@ public class GameController implements ActionListener {
 		score = 0;
 		enemyMaxSpeed = 2;
     	level = 1;
+    	lvlLbl.setText("Level: " + 1);
     	spawnTimer = 500;
 		t.start();
     }
