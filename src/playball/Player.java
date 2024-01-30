@@ -51,12 +51,47 @@ public class Player {
 	// No damage timer:
 	public int timeSinceLastHit = 0;
 	
+	// Sprint:
+	private int sprintStamina = 100;
+	private int currentSprintLength = 0;
+	private boolean isSprinting = false;
+	private boolean isSprintCooldown = false;
+	
 	public Player(int x, int y) {
 		this.x = x;
 		this.y = y;
 		
 		playerHitbox = new CircleHitbox(x, y, size, 7);
 	}
+	
+	/**
+	 * Reset all player values to defaults
+	 */
+	public void reset() {
+		x = 10;
+		y = 10;
+		playerHitbox.updatePosition(x, y);
+		isAlive = true;
+		shields = 0;
+		MAX_SHIELDS = 3;
+		isImmortal = false;
+		immortalityDuration = 0;
+		hasColdAura = false;
+		coldAuraRange = 50;
+		parry = false;
+		parryThreshold = 5;
+		parryTimer = 5;
+		isParrying = false;
+		parryConvertsEnemy = false;
+		timeSinceLastHit = 0;
+		slowed = false;
+		speed = 2;
+		sprintStamina = 100;
+		isSprinting = false;
+		isSprintCooldown = false;
+		currentSprintLength = 0;
+	}
+	
 	
 	public void setController(GameController g) {
 		controller = g;
@@ -81,23 +116,44 @@ public class Player {
         	orientation.setDown();
         }
         
-        int tempSpeed = speed; // save speed to return to it after
+        
+        int actualSpeed = speed;
         if (slowed) {
-        	speed = slowedSpeed;
+        	actualSpeed = slowedSpeed;
+        }
+        
+        if (isSprinting) { // add speed if sprinting
+        	if (currentSprintLength >= sprintStamina) { // check if over max
+        		isSprinting = false;
+        		isSprintCooldown = true;
+        	} else {
+        		currentSprintLength++;
+        		actualSpeed = actualSpeed + 1;
+        	}
+        } else {
+        	if (currentSprintLength > 0) {
+        		currentSprintLength--;
+        		
+        		if (isSprintCooldown) {
+        			if (currentSprintLength < sprintStamina - 30) {
+        				isSprintCooldown = false;
+        			}
+        		}
+        	}
         }
         
         // move up or down
         if (orientation.up) {
-            y -= speed;
+            y -= actualSpeed;
         } else if (orientation.down) {
-            y += speed;
+            y += actualSpeed;
         }
         
         // move left or right
         if (orientation.left) {
-            x -= speed;
+            x -= actualSpeed;
         } else if (orientation.right) {
-            x += speed;
+            x += actualSpeed;
         }
         
         playerHitbox.updatePosition(x, y);
@@ -107,10 +163,6 @@ public class Player {
         	immortalityDuration--;
         } else {
         	isImmortal = false;
-        }
-        
-        if (slowed) {
-        	speed = tempSpeed;
         }
 	}
 	
@@ -142,7 +194,6 @@ public class Player {
 			g2d.setColor(Color.CYAN);
 			g2d.setStroke(new BasicStroke(4));
 			g2d.drawOval(x-coldAuraRange/2, y-coldAuraRange/2, size+coldAuraRange, size+coldAuraRange);
-			
 		}
 		
 		// Slowed:
@@ -150,17 +201,32 @@ public class Player {
 			g2d.setColor(Color.LIGHT_GRAY);
 			g2d.setStroke(new BasicStroke(4));
 			g2d.drawOval(x-2, y-2, size+4, size+4);
-			g2d.setColor(Color.GREEN);
 		}
 		
-		// Parry:
-		if (parry && parryTimer < parryThreshold) { // parry window is active
-			g2d.setColor(Color.YELLOW);
+		// Sprint:
+		if (currentSprintLength > 0 && currentSprintLength <= sprintStamina) {
+			int transparency = 180;
+			if (!isSprinting) {
+				transparency = 100;
+			}
+			
+			g2d.setColor(new Color(0, 0, 0, transparency));
+			g2d.setStroke(new BasicStroke(2));
+			g2d.drawRect(x-17, y-20, 50, 10);
+			
+			int sprintWidth = (int)(48*((double)currentSprintLength/sprintStamina));
+			if (isSprintCooldown) {
+				g2d.setColor(new Color(255, 165, 0, transparency)); // cooldown color
+			} else {
+				g2d.setColor(new Color(255, 255, 0, transparency)); // sprint color
+			}
+			
+			g2d.fillRect(x-16, y-19, sprintWidth, 8);
 		}
 		
 		// Immortality:
-		int transparency = (int)((immortalityDuration/maxImmortality)*255);
 		if (isImmortal) {
+			int transparency = (int)((immortalityDuration/maxImmortality)*255);
 			g2d.setColor(new Color(255, 0, 0, transparency));
 			g2d.setStroke(new BasicStroke(4));
 			g2d.drawOval(x-7, y-7, size+14, size+14);
@@ -169,34 +235,14 @@ public class Player {
 			g2d.setColor(Color.GREEN);
 		}
 		
+		// Parry:
+		if (parry && parryTimer < parryThreshold) { // parry window is active
+			g2d.setColor(Color.YELLOW);
+		}
 		
 		g2d.fillOval(x, y, size, size);
 	}
 	
-	
-	/**
-	 * Reset all player values to defaults
-	 */
-	public void reset() {
-		x = 10;
-		y = 10;
-		playerHitbox.updatePosition(x, y);
-		isAlive = true;
-		shields = 0;
-		MAX_SHIELDS = 3;
-		isImmortal = false;
-		immortalityDuration = 0;
-		hasColdAura = false;
-		coldAuraRange = 50;
-		parry = false;
-		parryThreshold = 5;
-		parryTimer = 5;
-		isParrying = false;
-		parryConvertsEnemy = false;
-		timeSinceLastHit = 0;
-		slowed = false;
-		speed = 2;
-	}
 	
 	// Powers:
 	public void addShields() {
@@ -244,6 +290,20 @@ public class Player {
 	
 	public void setMoveSpeed(int speed) {
 		this.speed = speed;
+	}
+	
+	public void sprint() {
+		if (!isSprintCooldown) {
+			isSprinting = true;
+		}
+	}
+	
+	public void stopSprint() {
+		isSprinting = false;
+	}
+	
+	public void increaseSprintStamina(int ammount) {
+		sprintStamina += ammount;
 	}
 	
 	/**

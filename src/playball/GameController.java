@@ -8,7 +8,6 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.swing.InputMap;
 import playball.effects.Effect;
 import playball.hitboxes.Hitbox;
 import playball.hitboxes.RectangleHitbox;
@@ -33,8 +32,6 @@ import playball.powerups.ObstacleSlowPowerup;
 import playball.powerups.Powerup;
 import playball.powerups.PowerupType;
 import playball.powerups.ShieldPowerup;
-
-import javax.swing.ActionMap;
 
 public class GameController implements ActionListener {
 
@@ -105,7 +102,9 @@ public class GameController implements ActionListener {
     	PARRY_CONVERTS_ALLY,
     	SPAWN_FRIENDLY,
     	IMPROVE_SPAWN_FRIENDLY_TYPE,
-    	IMPROVE_SPAWN_FRIENDLY_RATE
+    	IMPROVE_SPAWN_FRIENDLY_RATE,
+    	SPRINT,
+    	INCREASE_SPRINT_STAMINA
     }
     
     public ArrayList<Upgrade> remainingUpgrades = new ArrayList<Upgrade>(Arrays.asList(
@@ -121,7 +120,8 @@ public class GameController implements ActionListener {
     		Upgrade.BOMB_RANGE,
     		Upgrade.DROP_FREQUENCY,
     		Upgrade.DROP_FREQUENCY,
-    		Upgrade.SPAWN_FRIENDLY
+    		Upgrade.SPAWN_FRIENDLY,
+    		Upgrade.SPRINT
     ));
     
     public GameController() {
@@ -169,8 +169,10 @@ public class GameController implements ActionListener {
         actionMap = frame.getRootPane().getActionMap();
 
         // Right:
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "moveRight");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0), "moveRight");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0, false), "moveRight");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, KeyEvent.SHIFT_DOWN_MASK, false), "moveRight");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, false), "moveRight");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.SHIFT_DOWN_MASK, false), "moveRight");
         actionMap.put("moveRight", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -179,8 +181,10 @@ public class GameController implements ActionListener {
         });
         
         // Left:
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "moveLeft");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), "moveLeft");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0, false), "moveLeft");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, KeyEvent.SHIFT_DOWN_MASK, false), "moveLeft");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0, false), "moveLeft");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.SHIFT_DOWN_MASK, false), "moveLeft");
         actionMap.put("moveLeft", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -189,8 +193,10 @@ public class GameController implements ActionListener {
         });
         
         // Up:
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "moveUp");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, 0), "moveUp");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0, false), "moveUp");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, KeyEvent.SHIFT_DOWN_MASK, false), "moveUp");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, 0, false), "moveUp");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, KeyEvent.SHIFT_DOWN_MASK, false), "moveUp");
         actionMap.put("moveUp", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -199,8 +205,10 @@ public class GameController implements ActionListener {
         });
         
         // Down:
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "moveDown");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0), "moveDown");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0, false), "moveDown");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, KeyEvent.SHIFT_DOWN_MASK, false), "moveDown");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0, false), "moveDown");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.SHIFT_DOWN_MASK, false), "moveDown");
         actionMap.put("moveDown", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -216,6 +224,21 @@ public class GameController implements ActionListener {
 				player.parry();
 			}
         });
+        
+        //Sprint:
+        actionMap.put("sprint", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				player.sprint();
+			}
+		});
+        
+        actionMap.put("disableSprint", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				player.stopSprint();
+			}
+		});
         
         addObstacle(ObstacleType.RECTANGLE, 1);
         player.setController(this);
@@ -247,7 +270,8 @@ public class GameController implements ActionListener {
         		Upgrade.BOMB_RANGE,
         		Upgrade.DROP_FREQUENCY,
         		Upgrade.DROP_FREQUENCY,
-        		Upgrade.SPAWN_FRIENDLY
+        		Upgrade.SPAWN_FRIENDLY,
+        		Upgrade.SPRINT
         ));
     	
     	// reset upgrades:
@@ -259,7 +283,10 @@ public class GameController implements ActionListener {
     	spawnFirendlyThreshold = 2000;
     	friendlyAlliesTrack = false;
     	
-    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0)); // remove parry keybind
+    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, false)); // remove parry keybind
+    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.SHIFT_DOWN_MASK, false));
+    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, KeyEvent.SHIFT_DOWN_MASK, false)); // remove sprint keybind
+    	inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true)); 
     	
     	addObstacle(ObstacleType.RECTANGLE, 1);
     	player.reset();
@@ -715,7 +742,8 @@ public class GameController implements ActionListener {
     		player.enableParry();
     		
     		// Add Parry Keybind:
-            inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0), "parry");
+            inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, false), "parry");
+            inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.SHIFT_DOWN_MASK, false), "parry");
             
             remainingUpgrades.add(Upgrade.INCREASE_PARRY_WINDOW);
             remainingUpgrades.add(Upgrade.INCREASE_PARRY_WINDOW);
@@ -728,15 +756,17 @@ public class GameController implements ActionListener {
     		player.upgradeParryConvertsEnemy();
     		break;
 		case TIME_SLOW:
-			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
-			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
-			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
+//			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
+//			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
+//			remainingUpgrades.add(Upgrade.INCREASE_TIME_SLOW_DURATION);
 			break;
 		case INCREASE_TIME_SLOW_DURATION:
 			
 			break;
 		case SLOW_NEAR:
 			player.addColdAura();
+			
+			// Add further upgrades:
 			remainingUpgrades.add(Upgrade.INCREASE_SLOW_NEAR_RANGE);
 			remainingUpgrades.add(Upgrade.INCREASE_SLOW_NEAR_RANGE);
 			remainingUpgrades.add(Upgrade.INCREASE_SLOW_NEAR_RANGE);
@@ -763,6 +793,8 @@ public class GameController implements ActionListener {
 		case SPAWN_FRIENDLY:
 			spawnFriendlyOnSurvive = true;
 			spawnFirendlyThreshold = 2000;
+			
+			// Add further upgrades:
 			remainingUpgrades.add(Upgrade.IMPROVE_SPAWN_FRIENDLY_RATE);
 			remainingUpgrades.add(Upgrade.IMPROVE_SPAWN_FRIENDLY_TYPE);
 			break;
@@ -771,6 +803,18 @@ public class GameController implements ActionListener {
 			break;
 		case IMPROVE_SPAWN_FRIENDLY_TYPE:
 			friendlyAlliesTrack = true;
+			break;
+		case SPRINT:
+			// Add sprint keybind:
+			inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, KeyEvent.SHIFT_DOWN_MASK, false), "sprint");
+			inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "disableSprint");
+			
+			// Add further upgrades:
+			remainingUpgrades.add(Upgrade.INCREASE_SPRINT_STAMINA);
+			remainingUpgrades.add(Upgrade.INCREASE_SPRINT_STAMINA);
+			break;
+		case INCREASE_SPRINT_STAMINA:
+			player.increaseSprintStamina(50);
 			break;
 		default:
 			System.out.println("Invalid powerup");

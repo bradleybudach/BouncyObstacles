@@ -145,6 +145,14 @@ public class UpgradePanel extends JPanel {
 			title.setText("<html>Spawn Friendly Obstacle: Tracking Type</html>");
 			descriptionText.setText("All allies spawned when the player avoids damage are now seek out nearby obstacles.");
 			break;
+		case SPRINT:
+			title.setText("<html>Sprint</html>");
+			descriptionText.setText("Hold shift to sprint, increasing speed by 1 for a limited duration.");
+			break;
+		case INCREASE_SPRINT_STAMINA:
+			title.setText("<html>Sprint: Increase Stamina</html>");
+			descriptionText.setText("Increase the maximum duration of a sprint by 50.");
+			break;
 		default:
 			System.out.println("Invalid powerup");
 			break;
