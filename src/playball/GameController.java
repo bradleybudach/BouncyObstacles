@@ -369,7 +369,7 @@ public class GameController implements ActionListener {
     		obstacles.clear();
     		lvlLbl.setText("Level: " + level);
     		
-    		if (level <= 5) {
+    		if (level <= 8) {
     			spawnTimer -= 50;
     		}
     		
@@ -459,7 +459,7 @@ public class GameController implements ActionListener {
 		
 		if (level >= 4) {
 			rand = Math.random();
-			if (rand < 0.1) {
+			if (rand < 0.2) {
 				addObstacle(ObstacleType.POWERUP_EATER, 0);
 			}
 		}
@@ -929,6 +929,8 @@ public class GameController implements ActionListener {
 			} else {
 				allyObstacles.add(new AllyRectangleObstacle(o.width, o.height, o.x, o.y, o.speed, o.dir, allyBounces));
 			}
+		} else {
+			allyObstacles.add(new AllyCircleObstacle(o.height, o.x, o.y, o.speed, o.dir, allyBounces));
 		}
 		// TODO: AllySlowObstacles
 		

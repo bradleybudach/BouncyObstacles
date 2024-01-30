@@ -41,9 +41,9 @@ public class AllyBombPowerup extends Powerup {
 
 	@Override
 	public void activate(GameController controller) {
-		controller.convertObstaclesInArea(new CircleHitbox(x-radius, y-radius, diameter, radius));
+		controller.convertObstaclesInArea(new CircleHitbox(x-radius+12, y-radius+12, diameter, radius));
 		
-		BombEffect effect = new BombEffect(x-radius, y-radius, diameter, radius);
+		BombEffect effect = new BombEffect(x-radius+12, y-radius+12, diameter, radius);
 		effect.setColor(Color.GREEN); // green explosion effect
 		controller.addEffect(effect);
 	}

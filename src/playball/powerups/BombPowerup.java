@@ -41,8 +41,8 @@ public class BombPowerup extends Powerup {
 	
 	@Override
 	public void activate(GameController controller) {
-		controller.clearObstaclesFromArea(new CircleHitbox(x-radius, y-radius, diameter, radius));
-		controller.addEffect(new BombEffect(x-radius, y-radius, diameter, radius));
+		controller.clearObstaclesFromArea(new CircleHitbox(x-radius+12, y-radius+12, diameter, radius));
+		controller.addEffect(new BombEffect(x-radius+12, y-radius+12, diameter, radius));
 		
 	}
 
