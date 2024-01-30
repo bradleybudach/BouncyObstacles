@@ -54,6 +54,10 @@ public class SlowAbilityObstacle extends Obstacle {
 
 	@Override
 	public void move(Dimension screenDimension) {
+		if (queueRemove) { // dont slow the player if removed
+			return;
+		}
+		
 		if (controller.score % speedThrottle == 0) {
 			checkBorderCollision(screenDimension);
 			
