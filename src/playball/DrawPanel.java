@@ -11,7 +11,6 @@ import java.util.ArrayList;
 
 class DrawPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
-    private Dimension screenDimension = new Dimension(478, 456); // game dimensions
     private GameController controller;
     
     public DrawPanel(GameController controller) {
@@ -61,32 +60,7 @@ class DrawPanel extends JPanel {
      * 
      * @return returns true until ball runs into an obstacle and the game ends
      */
-    public boolean runFrame() {
-    	// Move Player
-    	controller.player.move(screenDimension);
-    	
-        // Move Obstacles
-    	controller.obstacles.forEach(o -> o.move(screenDimension)); // move all obstacles
-        
-        controller.allyObstacles.forEach(o -> o.move(screenDimension)); // move all allies
-        
-        // Check Collisions
-        controller.player.checkCollisions(controller.obstacles);
-        
-        // Check Obstacle Collisions
-        controller.obstacles.forEach(o -> {
-        	o.checkObstacleCollisions(controller.obstacles); // check obstacle bounces with eachother
-        });
-        
-        controller.allyObstacles.forEach(o -> {
-        	o.checkObstacleCollisions(controller.obstacles); // check collision with other obstacles
-        	o.checkHitboxCollision(controller.player.getHitbox()); // check collision with player
-        });
-        
-        controller.powerups.forEach(p -> p.checkPlayerCollision(controller)); // check powerup collisions
-        
+    public void drawFrame() {
         repaint();
-        
-        return controller.player.isAlive;
     }
  }

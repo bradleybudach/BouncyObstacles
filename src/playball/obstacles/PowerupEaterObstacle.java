@@ -144,6 +144,9 @@ public class PowerupEaterObstacle extends Obstacle {
 			int strokeSize = (int)(10*((double)eatingProcess/eatingTime)); 
 			g2d.setStroke(new BasicStroke(strokeSize));
 			g2d.drawOval(closestPowerup.x-5, closestPowerup.y-5, closestPowerup.width+10, closestPowerup.height+10);
+		} else {
+			eatingPowerup = false;
+			eatingProcess = 0;
 		}
 	}
 

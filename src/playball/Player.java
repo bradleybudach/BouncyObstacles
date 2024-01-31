@@ -14,8 +14,9 @@ import playball.hitboxes.Hitbox;
 import playball.obstacles.Obstacle;
 
 public class Player {
-	private GameController controller;
+	private GameController controller; // controller for causing effects
 	
+	// Core player information:
 	public boolean isAlive = true;
 	public int x, y;
 	private int size = 16;
@@ -44,8 +45,8 @@ public class Player {
 	
 	// Parry:
 	private boolean parry = false;
-	private int parryThreshold = 5;
-	private int parryTimer = 5;
+	private int parryThreshold = 2;
+	private int parryTimer = 2;
 	private boolean isParrying = false;
 	private boolean parryConvertsEnemy = false;
 	
@@ -62,6 +63,9 @@ public class Player {
 	private boolean explodeOnHit = false;
 	private int explodeOnHitRange = 100;
 	private int explodeOnHitRaidus = 50;
+	
+	// Immortality on shield:
+	private boolean gainShieldsGivesImmortality = false;
 	
 	public Player(int x, int y) {
 		this.x = x;
@@ -85,8 +89,8 @@ public class Player {
 		hasColdAura = false;
 		coldAuraRange = 50;
 		parry = false;
-		parryThreshold = 5;
-		parryTimer = 5;
+		parryThreshold = 2;
+		parryTimer = 2;
 		isParrying = false;
 		parryConvertsEnemy = false;
 		timeSinceLastHit = 0;
@@ -99,6 +103,7 @@ public class Player {
 		explodeOnHit = false;
 		explodeOnHitRange = 100;
 		explodeOnHitRaidus = 50;
+		gainShieldsGivesImmortality = false;
 	}
 	
 	
@@ -258,6 +263,10 @@ public class Player {
 		if (shields < MAX_SHIELDS) {
 			shields++;
 		}
+		
+		if (gainShieldsGivesImmortality) {
+			setImmortal(40);
+		}
 	}
 	
 	public void increaseMaxShields() {
@@ -346,6 +355,13 @@ public class Player {
 	public void increaseExplodeOnHitRange(int increase) {
 		explodeOnHitRange += increase;
 		explodeOnHitRaidus = explodeOnHitRange/2;
+	}
+	
+	/**
+	 * Set player gains shield on immortality
+	 */
+	public void enableImmortalOnShieldGain() {
+		gainShieldsGivesImmortality = true;
 	}
 	
 	

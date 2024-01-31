@@ -19,13 +19,20 @@ import playball.GameController.Upgrade;
 public class UpgradePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
+	// Components:
 	private JLabel title = new JLabel();
 	private JTextArea descriptionText = new JTextArea();
 	private JButton submitButton = new JButton("Select Upgrade");
-	private Upgrade upgrade;
+	
+	private Upgrade upgrade; // saved upgrade
+	
+	// Background colors:
 	private Color greenColor = new Color(144, 238, 144);
 	private Color whiteColor = new Color(240, 240, 240);
 	
+	/**
+	 * Creates an upgrade panel to display upgrade choices
+	 */
 	public UpgradePanel() {
 		super();
 		setLayout(new BorderLayout(0, 10));
@@ -87,11 +94,11 @@ public class UpgradePanel extends JPanel {
 		switch (upgrade) {
 		case PARRY:
 			title.setText("<html>Parry</html>");
-			descriptionText.setText("Press Q within 5 frames of getting hit to parry an enemy and survive the hit, bouncing yourself in the opposite direction.");
+			descriptionText.setText("Press Q within 2 frames of getting hit to parry an enemy and survive the hit, bouncing yourself in the opposite direction.");
 			break;
 		case INCREASE_PARRY_WINDOW:
 			title.setText("<html>Parry: Increase Window</html>");
-			descriptionText.setText("Increase the window you have to parry enemies by 2 frames.");
+			descriptionText.setText("Increase the window you have to parry enemies by 1 frame.");
 			break;
 		case PARRY_CONVERTS_ALLY:
 			title.setText("<html>Parry: Convert Ally</html>");
@@ -103,15 +110,15 @@ public class UpgradePanel extends JPanel {
 			break;
 		case INCREASE_TIME_SLOW_DURATION:
 			title.setText("<html>Time Slow: Increase Duration</html>");
-			descriptionText.setText("Increase the maximum duration of the time slow by +50");
+			descriptionText.setText("Increase the maximum duration of the time slow by 50 frames");
 			break;
 		case SLOW_NEAR:
-			title.setText("<html>Slow Near</html>");
-			descriptionText.setText("Slow all enemies that get within a radius of 50 px.");
+			title.setText("<html>Chilling Grasp</html>");
+			descriptionText.setText("Slow all enemies that get within a radius of 50px.");
 			break;
 		case INCREASE_SLOW_NEAR_RANGE:
-			title.setText("<html>Slow Near: Increase Range</html>");
-			descriptionText.setText("Increase the range of the slow near effect by 10.");
+			title.setText("<html>Chilling Grasp: Increase Range</html>");
+			descriptionText.setText("Increase the range of the slow near effect by 10px.");
 			break;
 		case MAX_SHIELDS:
 			title.setText("<html>Increase Max Shields</html>");
@@ -122,27 +129,27 @@ public class UpgradePanel extends JPanel {
 			descriptionText.setText("+1 bounces to allied obstacles.");
 			break;
 		case BETTER_IMMORTALITY:
-			title.setText("<html>Better Immortality</html>");
-			descriptionText.setText("Immortality powerup is 10% more likely to spawn and has an its duration increased by 100.");
+			title.setText("<html>Immortal Aptitude</html>");
+			descriptionText.setText("Immortality powerup is 10% more likely to spawn and has an its duration increased by 100 frames.");
 			break;
 		case BOMB_RANGE:
-			title.setText("<html>Increase Bomb Range</html>");
-			descriptionText.setText("Increase the range of all bombs by +50.");
+			title.setText("<html>Explosives Expert</html>");
+			descriptionText.setText("Increase the range of all bombs by +50px.");
 			break;
 		case DROP_FREQUENCY:
-			title.setText("<html>Increase Drop Frequency</html>");
+			title.setText("<html>Lucky</html>");
 			descriptionText.setText("Drops will spawn +100 frames more often.");
 			break;
 		case SPAWN_FRIENDLY:
-			title.setText("<html>Spawn Friendly Obstacle</html>");
-			descriptionText.setText("Spawn a random frienly obstacle if you avoid taking damage for 2000 score.");
+			title.setText("<html>Friend Finder</html>");
+			descriptionText.setText("Spawn a random frienly obstacle if you avoid taking damage for 2000 frames.");
 			break;
 		case IMPROVE_SPAWN_FRIENDLY_RATE:
-			title.setText("<html>Spawn Friendly Obstacle: Improve Rate</html>");
-			descriptionText.setText("Improve the rate of friendly obstacle spawns if the player is not hit by 500.");
+			title.setText("<html>Friend Finder: Improve Rate</html>");
+			descriptionText.setText("Improve the rate of friendly obstacle spawns if the player is not hit by 500 frames.");
 			break;
 		case IMPROVE_SPAWN_FRIENDLY_TYPE:
-			title.setText("<html>Spawn Friendly Obstacle: Tracking Type</html>");
+			title.setText("<html>Friend Finder: Bloodhounds</html>");
 			descriptionText.setText("All allies spawned when the player avoids damage are now seek out nearby obstacles.");
 			break;
 		case SPRINT:
@@ -151,7 +158,7 @@ public class UpgradePanel extends JPanel {
 			break;
 		case INCREASE_SPRINT_STAMINA:
 			title.setText("<html>Sprint: Increase Stamina</html>");
-			descriptionText.setText("Increase the maximum duration of a sprint by 50.");
+			descriptionText.setText("Increase the maximum duration of a sprint by 50 frames.");
 			break;
 		case GAIN_SHEILD_ON_SURVIVE:
 			title.setText("<html>Survival Expert</html>");
@@ -159,15 +166,19 @@ public class UpgradePanel extends JPanel {
 			break;
 		case IMPROVE_SHIELD_GAIN_RATE:
 			title.setText("<html>Survival Expert: Improve Rate</html>");
-			descriptionText.setText("Improve the rate shield regen if the player is not hit by 250.");
+			descriptionText.setText("Improve the rate shield regen if the player is not hit by 250 frames.");
 			break;
 		case PLAYER_EXPLODE_ON_HIT:
 			title.setText("<html>Retaliation</html>");
-			descriptionText.setText("Player explodes on taking damage in a radius of 100 px, destroys all nearby enemies.");
+			descriptionText.setText("Player explodes on taking damage in a radius of 100px, destroys all nearby enemies.");
 			break;
 		case IMPROVE_EXPLODE_ON_HIT_RANGE:
 			title.setText("<html>Retaliation : Imrpove Range</html>");
 			descriptionText.setText("Improve the range of the player explosion on hit by 50.");
+			break;
+		case GAIN_SHIELD_GIVES_IMMORTALITY:
+			title.setText("<html>Strategic Survival</html>");
+			descriptionText.setText("Picking up shield powerups gives the player immortality for 40 frames.");
 			break;
 		default:
 			System.out.println("Invalid powerup");
