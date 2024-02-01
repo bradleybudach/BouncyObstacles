@@ -16,8 +16,12 @@ public class ObstacleSlowPowerup extends Powerup {
 
 	@Override
 	public void activate(GameController g) {
-		g.obstacles.forEach(o -> o.setSpeed(1));
-		g.addEffect(new SlowEffect(g.obstacles));
+		g.obstacles.forEach(o -> {
+			if (o.speed > 1) {
+				o.setSpeed(1);
+				g.addEffect(new SlowEffect(o));
+			}
+		});
 	}
 
 }

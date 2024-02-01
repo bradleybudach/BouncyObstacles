@@ -8,5 +8,6 @@ public enum PowerupType {
 	BOMB,
 	ALLY_BOMB,
 	SLOW,
-	IMMORTALITY
+	IMMORTALITY,
+	DOWNGRADE
 }

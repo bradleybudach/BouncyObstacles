@@ -36,7 +36,7 @@ public class BombObstacle extends Obstacle {
 		controller.player.hitPlayer(explosionHitbox); // checks if bomb hit player
 		
 		controller.addEffect(new BombEffect(x-(explosionDiameter/2)+radius, y-(explosionDiameter/2)+radius, explosionDiameter, explosionDiameter/2));
-		this.remove();
+		this.queueRemove();
 	}
 
 	@Override

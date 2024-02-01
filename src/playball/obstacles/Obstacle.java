@@ -24,6 +24,7 @@ public abstract class Obstacle {
 	public GameController controller;
 	
 	public boolean queueRemove = false;
+	public boolean ignoreCollisions = false;
 	
 	/**
 	 * Creates Obstacle
@@ -105,9 +106,14 @@ public abstract class Obstacle {
 	 * Checks if this obstacle is colliding with any other obstacles and changes it's direction accordingly.
 	 */
 	public void checkObstacleCollisions(ArrayList<Obstacle> obstacles) {
+		if (ignoreCollisions) {
+			return;
+		}
+		
 		ArrayList<Obstacle> obstaclesHit = new ArrayList<Obstacle>();
+		
 		for (Obstacle o : obstacles) {
-    		if (this != o) {
+    		if (this != o && !o.ignoreCollisions) {
     			Direction d = hitbox.checkCollision(o.getHitbox());
     			if (d != null) {
     				// combine collision directions
@@ -136,7 +142,7 @@ public abstract class Obstacle {
 	/**
 	 * Queue this obstacle to be removed in the next game update
 	 */
-	public void remove() {
+	public void queueRemove() {
 		cleanup();
 		queueRemove = true;
 	}

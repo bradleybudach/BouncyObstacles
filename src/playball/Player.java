@@ -374,7 +374,7 @@ public class Player {
     	for (Obstacle o : obstacles) { // checks ball collisions with all obstacles
     		if (o.getHitbox().checkCollision(playerHitbox) != null) {    			
     			if (isImmortal) {
-    				o.remove(); // delete hit obstacle
+    				o.queueRemove(); // delete hit obstacle
     				return;
     			}
     			
@@ -393,7 +393,7 @@ public class Player {
     							controller.convertObstacleToAlly(o);
     						}
     						
-    						o.remove(); // remove parried obstacle
+    						o.queueRemove(); // remove parried obstacle
     						
     						// Bounce player off obstacle:
     						int leastDist = Integer.MAX_VALUE;
@@ -430,7 +430,7 @@ public class Player {
     			
     			if (shields > 0) {
     				shields--;
-    				o.remove(); // delete hit obstacle
+    				o.queueRemove(); // delete hit obstacle
     			} else {
     				isAlive = false;
     			}

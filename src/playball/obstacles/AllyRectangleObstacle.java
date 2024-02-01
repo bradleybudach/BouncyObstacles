@@ -21,7 +21,7 @@ public class AllyRectangleObstacle extends RectangleObstacle {
 		int hitCount = 0;
 		for(Obstacle o : obstaclesHit) {
 			if (!o.queueRemove) { // if o is queued to be removed
-				o.remove();
+				o.queueRemove();
 				hitCount++;
 			}
 		};
@@ -30,7 +30,7 @@ public class AllyRectangleObstacle extends RectangleObstacle {
 		
 		
 		if (maxCollisions <= 0) {
-			this.remove();
+			this.queueRemove();
 		}
 	}
 	

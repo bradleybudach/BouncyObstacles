@@ -180,6 +180,10 @@ public class UpgradePanel extends JPanel {
 			title.setText("<html>Strategic Survival</html>");
 			descriptionText.setText("Picking up shield powerups gives the player immortality for 40 frames.");
 			break;
+		case BOMB_SPAWN_RATE:
+			title.setText("<html>Detonator</html>");
+			descriptionText.setText("Explosive Bombs are 10% more likely to spawn.");
+			break;
 		default:
 			System.out.println("Invalid powerup");
 			break;

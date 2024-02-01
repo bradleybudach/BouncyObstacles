@@ -53,24 +53,14 @@ public class SpawnerObstacle extends Obstacle {
 		
 		// Spawn projectiles:
 		if (controller.score % spawnRate == 0) {
-			projectiles.add(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(false, false, false, true), projectileLifespan));
-			projectiles.add(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(false, false, true, false), projectileLifespan));
-			projectiles.add(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(false, true, false, false), projectileLifespan));
-			projectiles.add(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(true, false, false, false), projectileLifespan));
+			controller.queueAddObstacle(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(false, false, false, true), projectileLifespan));
+			controller.queueAddObstacle(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(false, false, true, false), projectileLifespan));
+			controller.queueAddObstacle(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(false, true, false, false), projectileLifespan));
+			controller.queueAddObstacle(new ProjectileObstacle(15, hitbox.getCenterX(), hitbox.getCenterY(), 1, new Direction(true, false, false, false), projectileLifespan));
 		}
 		
 		// move projectiles
 		projectiles.forEach(p -> p.move(screenDimension));
-		controller.player.checkCollisions(projectiles);
-		
-		// remove queued projectiles
-		ArrayList<Obstacle> removeList = new ArrayList<Obstacle>();
-		for (Obstacle o : projectiles) {
-			if (o.queueRemove) {
-				removeList.add(o);
-			}
-		}
-		projectiles.removeAll(removeList);
 	}
 
 	@Override
@@ -82,7 +72,7 @@ public class SpawnerObstacle extends Obstacle {
 		g.fillOval(hitbox.getCenterX()-size/2-1, hitbox.getCenterY()-size/2, size, size);
 		
 		
-		projectiles.forEach(p -> p.draw(g));
+		//projectiles.forEach(p -> p.draw(g));
 	}
 }
 
@@ -92,12 +82,13 @@ class ProjectileObstacle extends CircleObstacle {
 	public ProjectileObstacle(int diameter, int x, int y, int speed, Direction dir, int lifespan) {
 		super(diameter, x, y, speed, dir, Color.RED);
 		this.lifespan = lifespan;
+		ignoreCollisions = true; // projectiles don't bounce off other obstacles
 	}
 	
 	@Override
 	public void move(Dimension screenDimension) {
 		if (checkBorderCollision(screenDimension)) { // remove on collision with edge
-			remove();
+			queueRemove();
 		}
 		
 		runMoveSteps();
@@ -107,7 +98,7 @@ class ProjectileObstacle extends CircleObstacle {
 		// die:
 		lifespan--;
 		if (lifespan <= 0) {
-			remove();
+			queueRemove();
 		}
 	}
 }

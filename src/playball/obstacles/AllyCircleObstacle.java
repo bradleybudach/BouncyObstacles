@@ -20,7 +20,7 @@ public class AllyCircleObstacle extends CircleObstacle {
 		int hitCount = 0;
 		for(Obstacle o : obstaclesHit) {
 			if (!o.queueRemove) { // if o is queued to be removed
-				o.remove();
+				o.queueRemove();
 				hitCount++;
 			}
 		};
@@ -28,7 +28,7 @@ public class AllyCircleObstacle extends CircleObstacle {
 		maxCollisions -= hitCount;
 		
 		if (maxCollisions <= 0) {
-			this.remove();
+			this.queueRemove();
 		}
 	}
 	
